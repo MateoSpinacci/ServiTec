@@ -1,0 +1,21 @@
+
+services:
+  tecnicos-db:
+    image: postgres:16
+    container_name: servitec-tecnicos-db
+    environment:
+      POSTGRES_DB: servitec_tecnicos
+      POSTGRES_USER: servitec
+      POSTGRES_PASSWORD: ${TECNICOS_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - tecnicos_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U servitec -d servitec_tecnicos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tecnicos_data:
