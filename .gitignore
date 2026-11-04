@@ -1,0 +1,22 @@
+
+# Maven
+target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Java
+*.class
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
