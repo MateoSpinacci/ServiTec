@@ -1,5 +1,6 @@
 package com.servitec.tecnicos.entity;
 
+import com.servitec.tecnicos.dto.request.CrearTecnicoRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -46,5 +47,25 @@ public class Tecnico {
             uniqueConstraints = @UniqueConstraint(columnNames = {"tecnico_id", "especialidad_id"})
     )
     private Set<Especialidad> especialidades = new HashSet<>();
+
+    private Tecnico(String keycloakUserId, String nombre, String telefono, String direccionBase, Double latitudBase, Double longitudBase) {
+        this.keycloakUserId = keycloakUserId;
+        this.nombre = nombre;
+        this.telefono = telefono;
+        this.direccionBase = direccionBase;
+        this.latitudBase = latitudBase;
+        this.longitudBase = longitudBase;
+        this.activo = true;
+    }
+
+    public static Tecnico of(CrearTecnicoRequest request) {
+        return new Tecnico(request.getKeycloakUserId(),
+                request.getNombre(),
+                request.getTelefono(),
+                request.getDireccionBase(),
+                request.getLatitudBase(),
+                request.getLongitudBase()
+                );
+    }
 }
 

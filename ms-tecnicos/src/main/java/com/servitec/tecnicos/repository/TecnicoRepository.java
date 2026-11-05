@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TecnicoRepository extends JpaRepository<Tecnico, Long> {
+    boolean existsByKeycloakUserId(String keycloakUserId);
 }
