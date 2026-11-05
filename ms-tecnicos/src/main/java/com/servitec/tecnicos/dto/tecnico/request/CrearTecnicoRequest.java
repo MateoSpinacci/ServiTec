@@ -1,4 +1,4 @@
-package com.servitec.tecnicos.dto.request;
+package com.servitec.tecnicos.dto.tecnico.request;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

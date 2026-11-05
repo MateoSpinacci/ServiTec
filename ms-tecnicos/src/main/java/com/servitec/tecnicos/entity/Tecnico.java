@@ -1,6 +1,6 @@
 package com.servitec.tecnicos.entity;
 
-import com.servitec.tecnicos.dto.request.CrearTecnicoRequest;
+import com.servitec.tecnicos.dto.tecnico.request.CrearTecnicoRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

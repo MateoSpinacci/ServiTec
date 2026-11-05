@@ -1,8 +1,8 @@
 package com.servitec.tecnicos.controller;
 
 
-import com.servitec.tecnicos.dto.reponse.EspecialidadResponse;
-import com.servitec.tecnicos.dto.request.CrearEspecialidadRequest;
+import com.servitec.tecnicos.dto.especialidad.response.EspecialidadResponse;
+import com.servitec.tecnicos.dto.especialidad.request.CrearEspecialidadRequest;
 import com.servitec.tecnicos.service.EspecialidadService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;

@@ -1,6 +1,6 @@
 package com.servitec.tecnicos.entity;
 
-import com.servitec.tecnicos.dto.request.CrearEspecialidadRequest;
+import com.servitec.tecnicos.dto.especialidad.request.CrearEspecialidadRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

@@ -1,4 +1,4 @@
-package com.servitec.tecnicos.dto.reponse;
+package com.servitec.tecnicos.dto.especialidad.response;
 
 import com.servitec.tecnicos.entity.Especialidad;
 import lombok.AccessLevel;

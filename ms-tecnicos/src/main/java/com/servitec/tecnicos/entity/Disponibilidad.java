@@ -26,4 +26,10 @@ public class Disponibilidad {
 
     @Column(nullable = false)
     LocalDateTime fin;
+
+    public Disponibilidad(Tecnico tecnico, LocalDateTime inicio, LocalDateTime fin) {
+        this.tecnico = tecnico;
+        this.inicio = inicio;
+        this.fin = fin;
+    }
 }

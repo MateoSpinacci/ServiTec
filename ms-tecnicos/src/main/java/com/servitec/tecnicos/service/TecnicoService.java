@@ -1,8 +1,8 @@
 package com.servitec.tecnicos.service;
 
-import com.servitec.tecnicos.dto.reponse.EspecialidadResponse;
-import com.servitec.tecnicos.dto.reponse.TecnicoResponse;
-import com.servitec.tecnicos.dto.request.CrearTecnicoRequest;
+import com.servitec.tecnicos.dto.tecnico.response.TecnicoResponse;
+import com.servitec.tecnicos.dto.tecnico.request.ActualizarTecnicoRequest;
+import com.servitec.tecnicos.dto.tecnico.request.CrearTecnicoRequest;
 import com.servitec.tecnicos.entity.Especialidad;
 import com.servitec.tecnicos.entity.Tecnico;
 import com.servitec.tecnicos.repository.EspecialidadRepository;
@@ -69,5 +69,60 @@ public class TecnicoService {
                                 HttpStatus.NOT_FOUND,
                                 "Técnico no encontrado."))
         );
+    }
+
+    @Transactional
+    public TecnicoResponse actualizar(Long id, ActualizarTecnicoRequest request) {
+        Tecnico tecnico = tecnicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Técnico no encontrado."));
+
+        if (request.getNombre() != null && !request.getNombre().isBlank()) {
+            tecnico.setNombre(request.getNombre());
+        }
+
+        if (request.getTelefono() != null && !request.getTelefono().isBlank()) {
+            tecnico.setTelefono(request.getTelefono());
+        }
+
+        if (request.getDireccionBase() != null && !request.getDireccionBase().isBlank()) {
+            tecnico.setDireccionBase(request.getDireccionBase());
+        }
+
+        if (request.getLatitudBase() != null) {
+            tecnico.setLatitudBase(request.getLatitudBase());
+        }
+
+        if (request.getLongitudBase() != null) {
+            tecnico.setLongitudBase(request.getLongitudBase());
+        }
+        if (request.getEspecialidadesId() != null) {
+            Set<Especialidad> especialidades = new HashSet<>();
+            for (Long idEspecialidad : request.getEspecialidadesId()) {
+                Especialidad especialidad = especialidadRepository.findById(idEspecialidad)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Especialidad no existente."
+                        ));
+
+                especialidades.add(especialidad);
+            }
+            tecnico.setEspecialidades(especialidades);
+        }
+        return TecnicoResponse.of(tecnicoRepository.save(tecnico));
+    }
+
+    @Transactional
+    public TecnicoResponse desactivar(Long id) {
+        Tecnico tecnico = tecnicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Técnico no encontrado."
+                ));
+
+        tecnico.setActivo(false);
+
+        return TecnicoResponse.of(tecnico);
     }
 }
