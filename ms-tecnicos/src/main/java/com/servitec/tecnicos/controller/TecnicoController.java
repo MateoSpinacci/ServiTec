@@ -1,7 +1,8 @@
 package com.servitec.tecnicos.controller;
 
-import com.servitec.tecnicos.dto.reponse.TecnicoResponse;
-import com.servitec.tecnicos.dto.request.CrearTecnicoRequest;
+import com.servitec.tecnicos.dto.tecnico.response.TecnicoResponse;
+import com.servitec.tecnicos.dto.tecnico.request.ActualizarTecnicoRequest;
+import com.servitec.tecnicos.dto.tecnico.request.CrearTecnicoRequest;
 import com.servitec.tecnicos.service.TecnicoService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -46,6 +47,21 @@ public class TecnicoController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<TecnicoResponse> actualizar(@PathVariable Long id,
+                                                      @Valid @RequestBody ActualizarTecnicoRequest request) {
+        TecnicoResponse response = tecnicoService.actualizar(id, request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @PatchMapping("/{id}/desactivacion")
+    public ResponseEntity<TecnicoResponse> desactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(tecnicoService.desactivar(id));
     }
 }
 

@@ -1,7 +1,7 @@
 package com.servitec.tecnicos.service;
 
-import com.servitec.tecnicos.dto.reponse.EspecialidadResponse;
-import com.servitec.tecnicos.dto.request.CrearEspecialidadRequest;
+import com.servitec.tecnicos.dto.especialidad.response.EspecialidadResponse;
+import com.servitec.tecnicos.dto.especialidad.request.CrearEspecialidadRequest;
 import com.servitec.tecnicos.entity.Especialidad;
 import com.servitec.tecnicos.repository.EspecialidadRepository;
 import lombok.AccessLevel;
