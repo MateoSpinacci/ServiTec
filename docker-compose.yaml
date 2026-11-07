@@ -34,6 +34,47 @@ services:
       timeout: 5s
       retries: 10
 
+  keycloak-db:
+    image: postgres:16
+    container_name: servitec-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.8
+    container_name: servitec-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME: http://localhost:8180
+      KC_HTTP_ENABLED: "true"
+      # Se reemplaza en keycloak/servitec-realm.json al importar el realm
+      MS_SOLICITUDES_CLIENT_SECRET: ${MS_SOLICITUDES_CLIENT_SECRET}
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/servitec-realm.json:/opt/keycloak/data/import/servitec-realm.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
 volumes:
   tecnicos_data:
   solicitudes_data:
+  keycloak_data:
