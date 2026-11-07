@@ -1,8 +1,7 @@
 package com.servitec.tecnicos.controller;
 
-import com.servitec.tecnicos.dto.disponibilidad.request.CrearDisponibilidadRequest;
+import com.servitec.tecnicos.dto.disponibilidad.request.DisponibilidadRequest;
 import com.servitec.tecnicos.dto.disponibilidad.response.DisponibilidadResponse;
-import com.servitec.tecnicos.dto.tecnico.response.TecnicoResponse;
 import com.servitec.tecnicos.service.DisponibilidadService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -23,7 +22,7 @@ public class DisponibilidadController {
 
     @PostMapping
     public ResponseEntity<DisponibilidadResponse> crear(@PathVariable Long id,
-                                                        @Valid @RequestBody CrearDisponibilidadRequest request) {
+                                                        @Valid @RequestBody DisponibilidadRequest request) {
         DisponibilidadResponse response = disponibilidadService.crear(id, request);
 
         return ResponseEntity
@@ -38,5 +37,16 @@ public class DisponibilidadController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @PatchMapping("/{disponibilidadId}")
+    public ResponseEntity<DisponibilidadResponse> actualizarDisponibilidad(
+            @PathVariable("id") Long tecnicoId,
+            @PathVariable Long disponibilidadId,
+            @Valid @RequestBody DisponibilidadRequest request) {
+
+        DisponibilidadResponse response = disponibilidadService.actualizarDisponibilidad(tecnicoId, disponibilidadId, request);
+
+        return ResponseEntity.ok(response);
     }
 }

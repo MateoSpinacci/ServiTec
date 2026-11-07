@@ -12,13 +12,6 @@ import java.util.List;
 
 @Repository
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
-    boolean existsByTecnicoIdAndEstadoAndInicioLessThanAndFinGreaterThan(
-            Long tecnicoId,
-            String estado,
-            LocalDateTime fin,
-            LocalDateTime inicio
-    );
-
     boolean existsBySolicitudIdAndEstado(
             Long solicitudId,
             EstadoReserva estado
@@ -38,4 +31,6 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("fin") LocalDateTime fin,
             @Param("estado") EstadoReserva estado
     );
+
+    List<Reserva> findByTecnicoIdAndEstado(Long tecnicoId, EstadoReserva estadoReserva);
 }

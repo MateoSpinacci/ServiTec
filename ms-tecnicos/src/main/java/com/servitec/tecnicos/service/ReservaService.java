@@ -101,17 +101,17 @@ public class ReservaService {
         return ReservaResponse.of(reservaRepository.save(reserva));
     }
 
+    @Transactional
     public void liberarReserva(Long id) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Reserva no encontrada."));
 
-        if (reserva.getEstado() != EstadoReserva.ACTIVA) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "La reserva no se encuentra en estado ACTIVA.");
+        if (reserva.getEstado() == EstadoReserva.LIBERADA) {
+            return;
         }
+
         reserva.setEstado(EstadoReserva.LIBERADA);
         reservaRepository.save(reserva);
     }
