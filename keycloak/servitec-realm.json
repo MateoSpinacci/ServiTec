@@ -1,0 +1,170 @@
+{
+  "realm": "servitec",
+  "displayName": "ServiTec",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "accessTokenLifespan": 1800,
+  "roles": {
+    "realm": [
+      {
+        "name": "CLIENTE",
+        "description": "Registra y consulta sus propias solicitudes"
+      },
+      {
+        "name": "TECNICO",
+        "description": "Consulta sus trabajos y registra inicio/resolución"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Gestiona técnicos, disponibilidades y asignaciones"
+      },
+      {
+        "name": "SERVICIO_INTERNO",
+        "description": "Rol de service accounts (comunicación entre microservicios)"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "servitec-api",
+      "name": "ServiTec API (Postman / Swagger)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:*",
+        "https://oauth.pstmn.io/v1/callback"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "fullScopeAllowed": true
+    },
+    {
+      "clientId": "ms-solicitudes",
+      "name": "ms-solicitudes (service account)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${MS_SOLICITUDES_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": true
+    }
+  ],
+  "users": [
+    {
+      "id": "a0000000-0000-4000-8000-000000000001",
+      "username": "admin1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin1@servitec.test",
+      "firstName": "Ana",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin1123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "id": "c0000000-0000-4000-8000-000000000001",
+      "username": "cliente1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "cliente1@servitec.test",
+      "firstName": "Carlos",
+      "lastName": "Cliente",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cliente1123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLIENTE"
+      ]
+    },
+    {
+      "id": "c0000000-0000-4000-8000-000000000002",
+      "username": "cliente2",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "cliente2@servitec.test",
+      "firstName": "Camila",
+      "lastName": "Cliente",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cliente2123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLIENTE"
+      ]
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000001",
+      "username": "tecnico1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "tecnico1@servitec.test",
+      "firstName": "Tomás",
+      "lastName": "Técnico",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tecnico1123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TECNICO"
+      ]
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000002",
+      "username": "tecnico2",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "tecnico2@servitec.test",
+      "firstName": "Tamara",
+      "lastName": "Técnica",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tecnico2123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TECNICO"
+      ]
+    },
+    {
+      "username": "service-account-ms-solicitudes",
+      "enabled": true,
+      "serviceAccountClientId": "ms-solicitudes",
+      "realmRoles": [
+        "SERVICIO_INTERNO"
+      ]
+    }
+  ]
+}
