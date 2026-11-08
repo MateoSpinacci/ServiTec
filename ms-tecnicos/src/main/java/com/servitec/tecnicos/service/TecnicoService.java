@@ -73,6 +73,15 @@ public class TecnicoService {
         );
     }
 
+    public TecnicoResponse buscarPorKeycloakUserId(String keycloakUserId) {
+        return TecnicoResponse.of(
+                tecnicoRepository.findByKeycloakUserId(keycloakUserId)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Técnico no encontrado."))
+        );
+    }
+
     @Transactional
     public TecnicoResponse actualizar(Long id, ActualizarTecnicoRequest request) {
         Tecnico tecnico = tecnicoRepository.findById(id)
