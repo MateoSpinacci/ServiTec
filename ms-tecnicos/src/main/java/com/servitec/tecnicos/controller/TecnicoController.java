@@ -49,6 +49,11 @@ public class TecnicoController {
                 .body(response);
     }
 
+    @GetMapping("/interno/keycloak/{keycloakUserId}")
+    public ResponseEntity<TecnicoResponse> buscarPorKeycloakUserId(@PathVariable String keycloakUserId) {
+        return ResponseEntity.ok(tecnicoService.buscarPorKeycloakUserId(keycloakUserId));
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<TecnicoResponse> actualizar(@PathVariable Long id,
                                                       @Valid @RequestBody ActualizarTecnicoRequest request) {
