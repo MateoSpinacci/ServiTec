@@ -15,7 +15,6 @@ import java.util.Optional;
 @Repository
 public interface TecnicoRepository extends JpaRepository<Tecnico, Long> {
     boolean existsByKeycloakUserId(String keycloakUserId);
-<<<<<<< HEAD
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM Tecnico t WHERE t.id = :id")
@@ -31,7 +30,7 @@ public interface TecnicoRepository extends JpaRepository<Tecnico, Long> {
     List<Tecnico> buscarActivosPorEspecialidad(
             @Param("especialidadId") Long especialidadId
     );
-=======
+
     Optional<Tecnico> findByKeycloakUserId(String keycloakUserId);
->>>>>>> origin/main
+
 }

@@ -13,6 +13,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,6 +29,8 @@ public class CandidatosService {
     DisponibilidadRepository disponibilidadRepository;
     ReservaRepository reservaRepository;
     RutasClient rutasClient;
+
+    static Logger log = LoggerFactory.getLogger(CandidatosService.class);
 
     public List<CandidatoResponse> buscarCandidatos(CandidatosRequest request) {
 
@@ -66,22 +70,29 @@ public class CandidatosService {
         List<CandidatoResponse> candidatos = new ArrayList<>();
 
         for (Tecnico tecnico : tecnicosDisponibles) {
+            try {
+                double segundos = rutasClient.calcularDuracionSegundos(
+                        tecnico.getLatitudBase(),
+                        tecnico.getLongitudBase(),
+                        request.getLatitud(),
+                        request.getLongitud()
+                );
 
-            double segundos = rutasClient.calcularDuracionSegundos(
-                    tecnico.getLatitudBase(),
-                    tecnico.getLongitudBase(),
-                    request.getLatitud(),
-                    request.getLongitud()
-            );
+                if (segundos <= 45 * 60) {
+                    long minutos = (long) Math.ceil(segundos / 60.0);
 
-            if (segundos <= 45 * 60) {
-                long minutos = (long) Math.ceil(segundos / 60.0);
-
-                candidatos.add(new CandidatoResponse(
+                    candidatos.add(new CandidatoResponse(
+                            tecnico.getId(),
+                            tecnico.getNombre(),
+                            minutos
+                    ));
+                }
+            } catch (Exception ex) {
+                log.warn(
+                        "No se pudo calcular la ruta para el técnico {}",
                         tecnico.getId(),
-                        tecnico.getNombre(),
-                        minutos
-                ));
+                        ex
+                );
             }
         }
 
