@@ -13,23 +13,25 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "intervenciones")
 public class Intervencion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false, unique = true)
-    Long solicitudId;
+    @OneToOne
+    @JoinColumn(name = "solicitudes_id", nullable = false)
+    Solicitud solicitud;
+
+    @OneToOne
+    @JoinColumn(name = "asignacion_id", nullable = false)
+    Asignacion asignacion;
 
     @Column(nullable = false)
-    Long tecnicoId;
+    LocalDateTime inicio;
+
+    @Column(nullable = false)
+    LocalDateTime fin;
 
     String diagnostico;
 
     String resolucion;
-
-    @Column(nullable = false)
-    LocalDateTime fechaInicio;
-
-    LocalDateTime fechaResolucion;
 }
