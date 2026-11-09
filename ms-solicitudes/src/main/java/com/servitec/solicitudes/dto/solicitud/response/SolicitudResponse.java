@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class SolicitudResponse {
 
     Long id;
-    Long clienteId;
+    String clienteId;
     Long tecnicoId;
     Long especialidadId;
     String descripcion;

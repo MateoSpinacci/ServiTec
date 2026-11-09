@@ -15,40 +15,97 @@ import com.servitec.solicitudes.repository.AsignacionRepository;
 import com.servitec.solicitudes.repository.IntervencionRepository;
 import com.servitec.solicitudes.repository.SolicitudRepository;
 import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SolicitudService {
+    SolicitudRepository solicitudRepository;
+    AsignacionRepository asignacionRepository;
+    IntervencionRepository intervencionRepository;
+    TecnicosClient tecnicosClient;
 
-    private final SolicitudRepository solicitudRepository;
-    private final AsignacionRepository asignacionRepository;
-    private final IntervencionRepository intervencionRepository;
-    private final TecnicosClient tecnicosClient;
+    public List<Solicitud> obtenerTodas(String keycloakUserId,
+                                        Collection<? extends GrantedAuthority> authorities,
+                                        EstadoSolicitud estado) {
 
-    public SolicitudService(
-            SolicitudRepository solicitudRepository,
-            AsignacionRepository asignacionRepository,
-            IntervencionRepository intervencionRepository,
-            TecnicosClient tecnicosClient) {
+        boolean esAdmin = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        this.solicitudRepository = solicitudRepository;
-        this.asignacionRepository = asignacionRepository;
-        this.intervencionRepository = intervencionRepository;
-        this.tecnicosClient = tecnicosClient;
+        if (esAdmin) {
+            if (estado != null) {
+                return solicitudRepository.findByEstado(estado);
+            }
+
+            return solicitudRepository.findAll();
+        }
+
+        if (estado != null) {
+            return solicitudRepository.findByClienteIdAndEstado(
+                    keycloakUserId,
+                    estado
+            );
+        }
+
+        return solicitudRepository.findByClienteId(keycloakUserId);
     }
 
-    public List<Solicitud> obtenerTodas() {
-        return solicitudRepository.findAll();
-    }
+    public Solicitud obtenerPorId(Long id, String keycloakUserId, Collection<? extends GrantedAuthority> authorities) {
+        Solicitud solicitud = solicitudRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Solicitud no encontrada"
+                ));
 
-    public Optional<Solicitud> obtenerPorId(Long id) {
-        return solicitudRepository.findById(id);
+        boolean esAdmin = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean esCliente = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
+
+        boolean esTecnico = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_TECNICO"));
+
+        if (esAdmin) {
+            return solicitud;
+        }
+
+        if (esCliente && solicitud.getClienteId().equals(keycloakUserId)) {
+            return solicitud;
+        }
+
+        if (esTecnico) {
+            Asignacion asignacion = asignacionRepository
+                    .findBySolicitudId(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.FORBIDDEN,
+                            "No estás asignado a esta solicitud"
+                    ));
+
+            validarTecnicoAsignado(asignacion, keycloakUserId);
+
+            return solicitud;
+        }
+
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "No tenés permiso para consultar esta solicitud"
+        );
     }
 
     public Long obtenerTecnicoAsignado(Long solicitudId) {
@@ -58,7 +115,7 @@ public class SolicitudService {
     }
 
     @Transactional
-    public Solicitud crear(SolicitudRequest request, Long clienteId) {
+    public Solicitud crear(SolicitudRequest request, String clienteId) {
 
         Solicitud solicitud = new Solicitud();
 
@@ -78,7 +135,7 @@ public class SolicitudService {
     }
 
     @Transactional
-    public Solicitud cancelar(Long id, Long clienteId) {
+    public Solicitud cancelar(Long id, String clienteId) {
 
         Solicitud solicitud = buscarSolicitud(id);
 
@@ -105,69 +162,31 @@ public class SolicitudService {
 
         Solicitud solicitud = buscarSolicitud(id);
 
-        if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Solo se pueden asignar solicitudes pendientes"
-            );
-        }
-
-        if (asignacionRepository.existsBySolicitudId(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "La solicitud ya tiene una asignación"
-            );
-        }
+        validarSolicitudAsignable(solicitud);
 
         Long tecnicoId = request.getTecnicoId();
 
         TecnicoResponse tecnico = tecnicosClient.obtenerPorId(tecnicoId);
 
-        if (tecnico == null || !tecnico.isActivo()) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "El técnico no está activo"
-            );
-        }
+        validarTecnico(tecnico, solicitud);
 
-        boolean tieneEspecialidad = tecnico.getEspecialidades() != null
-                && tecnico.getEspecialidades().stream()
-                .anyMatch(e ->
-                        e.getId().equals(solicitud.getEspecialidadId())
-                );
+        tecnicosClient.validarTiempoTraslado(tecnicoId, solicitud.getLatitud(), solicitud.getLongitud());
 
-        if (!tieneEspecialidad) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "El técnico no tiene la especialidad requerida"
-            );
-        }
+        ReservaRequest reservaRequest = construirReservaRequest(tecnicoId, solicitud);
 
-        LocalDateTime inicio = solicitud.getFechaSolicitud();
-        LocalDateTime fin = inicio.plusMinutes(
-                solicitud.getDuracionEstimada()
-        );
-
-        ReservaRequest reservaRequest = new ReservaRequest(
-                tecnicoId,
-                solicitud.getId(),
-                inicio,
-                fin
-        );
-
-        // ms-tecnicos revalida disponibilidad y superposiciones.
         ReservaResponse reserva = tecnicosClient.crearReserva(reservaRequest);
 
-        Asignacion asignacion = new Asignacion();
-        asignacion.setSolicitud(solicitud);
-        asignacion.setTecnicoId(tecnicoId);
-        asignacion.setReservaId(reserva.getId());
-        asignacion.setFechaCreacion(LocalDateTime.now());
-
         try {
+            Asignacion asignacion = new Asignacion();
+            asignacion.setSolicitud(solicitud);
+            asignacion.setTecnicoId(tecnicoId);
+            asignacion.setReservaId(reserva.getId());
+            asignacion.setFechaCreacion(LocalDateTime.now());
+
             asignacionRepository.saveAndFlush(asignacion);
 
             solicitud.setEstado(EstadoSolicitud.ASIGNADA);
+
             return solicitudRepository.saveAndFlush(solicitud);
 
         } catch (RuntimeException e) {
@@ -176,12 +195,13 @@ public class SolicitudService {
             } catch (RuntimeException compensacionError) {
                 e.addSuppressed(compensacionError);
             }
+
             throw e;
         }
     }
 
     @Transactional
-    public Solicitud iniciarTrabajo(Long id, Long tecnicoId) {
+    public Solicitud iniciarTrabajo(Long id, String tecnicoId) {
 
         Solicitud solicitud = buscarSolicitud(id);
         Asignacion asignacion = buscarAsignacion(id);
@@ -209,7 +229,7 @@ public class SolicitudService {
     @Transactional
     public Solicitud resolverTrabajo(
             Long id,
-            Long tecnicoId,
+            String tecnicoId,
             ResolucionRequest request) {
 
         Solicitud solicitud = buscarSolicitud(id);
@@ -241,10 +261,11 @@ public class SolicitudService {
         return solicitudRepository.save(solicitud);
     }
 
-    public List<Solicitud> obtenerTrabajosDelTecnico(Long tecnicoId) {
+    public List<Solicitud> obtenerTrabajosDelTecnico(String keycloakUserId) {
+        TecnicoResponse tecnico = tecnicosClient.obtenerPorKeycloakUserId(keycloakUserId);
 
-        return solicitudRepository.findByTecnicoIdAndEstadoIn(
-                tecnicoId,
+        return solicitudRepository.findTrabajosDelTecnico(
+                tecnico.getId(),
                 List.of(
                         EstadoSolicitud.ASIGNADA,
                         EstadoSolicitud.EN_CURSO
@@ -270,13 +291,78 @@ public class SolicitudService {
 
     private void validarTecnicoAsignado(
             Asignacion asignacion,
-            Long tecnicoId) {
+            String keycloakUserId) {
 
-        if (!asignacion.getTecnicoId().equals(tecnicoId)) {
+        Long tecnicoId = asignacion.getTecnicoId();
+
+        TecnicoResponse tecnico = tecnicosClient.obtenerPorId(tecnicoId);
+
+        if (!tecnico.getKeycloakUserId().equals(keycloakUserId)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "El técnico no está asignado a esta solicitud"
             );
         }
+    }
+
+    private void validarSolicitudAsignable(Solicitud solicitud) {
+
+        if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Solo se pueden asignar solicitudes pendientes"
+            );
+        }
+
+        if (asignacionRepository.existsBySolicitudId(solicitud.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "La solicitud ya tiene una asignación"
+            );
+        }
+    }
+
+    private void validarTecnico(
+            TecnicoResponse tecnico,
+            Solicitud solicitud) {
+
+        if (tecnico == null || !tecnico.isActivo()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El técnico no está activo"
+            );
+        }
+
+        boolean tieneEspecialidad = tecnico.getEspecialidades() != null
+                && tecnico.getEspecialidades().stream()
+                .anyMatch(e -> Objects.equals(
+                        e.getId(),
+                        solicitud.getEspecialidadId()
+                ));
+
+        if (!tieneEspecialidad) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El técnico no tiene la especialidad requerida"
+            );
+        }
+    }
+
+    private ReservaRequest construirReservaRequest(
+            Long tecnicoId,
+            Solicitud solicitud) {
+
+        LocalDateTime inicio = solicitud.getFechaSolicitud();
+
+        LocalDateTime fin = inicio.plusMinutes(
+                solicitud.getDuracionEstimada()
+        );
+
+        return new ReservaRequest(
+                tecnicoId,
+                solicitud.getId(),
+                inicio,
+                fin
+        );
     }
 }

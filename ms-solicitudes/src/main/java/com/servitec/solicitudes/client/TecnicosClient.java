@@ -1,5 +1,6 @@
 package com.servitec.solicitudes.client;
 
+import com.servitec.solicitudes.dto.asignacion.request.ValidarTrasladoRequest;
 import com.servitec.solicitudes.dto.tecnico.response.TecnicoResponse;
 import com.servitec.solicitudes.dto.disponibilidad.response.DisponibilidadResponse;
 import org.springframework.stereotype.Component;
@@ -52,6 +53,24 @@ public class TecnicosClient {
                     "No se pudo conectar con ms-tecnicos"
             );
         }
+    }
+
+    public void validarTiempoTraslado(
+            Long tecnicoId,
+            Double latitud,
+            Double longitud) {
+
+        ValidarTrasladoRequest request = new ValidarTrasladoRequest(
+                tecnicoId,
+                latitud,
+                longitud
+        );
+
+        restClient.post()
+                .uri("/api/v1/tecnicos/interno/validar-traslado")
+                .body(request)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     public List<DisponibilidadResponse> obtenerDisponibilidades(Long tecnicoId) {
@@ -140,6 +159,14 @@ public class TecnicosClient {
                     e
             );
         }
+    }
+
+    public TecnicoResponse obtenerPorKeycloakUserId(String keycloakUserId) {
+        return restClient.get()
+                .uri("/api/v1/tecnicos/interno/keycloak/{keycloakUserId}",
+                        keycloakUserId)
+                .retrieve()
+                .body(TecnicoResponse.class);
     }
 }
 
