@@ -1,7 +1,6 @@
 
 package com.servitec.solicitudes.controller;
 
-import com.servitec.solicitudes.dto.tecnico.response.TecnicoResponse;
 import com.servitec.solicitudes.entity.Solicitud;
 import com.servitec.solicitudes.service.SolicitudService;
 import com.servitec.solicitudes.dto.solicitud.request.SolicitudRequest;
