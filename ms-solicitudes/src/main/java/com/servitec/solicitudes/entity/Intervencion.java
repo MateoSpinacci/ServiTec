@@ -1,7 +1,10 @@
 package com.servitec.solicitudes.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
@@ -13,6 +16,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "intervenciones")
 public class Intervencion {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -28,7 +32,6 @@ public class Intervencion {
     @Column(nullable = false)
     LocalDateTime inicio;
 
-    @Column(nullable = false)
     LocalDateTime fin;
 
     String diagnostico;

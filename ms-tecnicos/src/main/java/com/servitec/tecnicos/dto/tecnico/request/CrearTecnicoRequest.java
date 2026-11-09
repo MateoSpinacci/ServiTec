@@ -1,9 +1,6 @@
 package com.servitec.tecnicos.dto.tecnico.request;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +22,7 @@ public class CrearTecnicoRequest {
 
     String telefono;
 
+    @NotBlank
     String direccionBase;
 
     @NotNull
@@ -37,6 +35,6 @@ public class CrearTecnicoRequest {
     @DecimalMax("180.0")
     Double longitudBase;
 
-    @NotNull
-    List<Long> especialidadesId;
+    @NotEmpty
+    List<@NotNull Long> especialidadesId;
 }

@@ -1,8 +1,6 @@
 package com.servitec.tecnicos.dto.tecnico.request;
 
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,8 +27,12 @@ public class CandidatosRequest {
     Integer duracionEstimadaMin;
 
     @NotNull
+    @DecimalMin("-90.0")
+    @DecimalMax("90.0")
     Double latitud;
 
     @NotNull
+    @DecimalMin("-180.0")
+    @DecimalMax("180.0")
     Double longitud;
 }

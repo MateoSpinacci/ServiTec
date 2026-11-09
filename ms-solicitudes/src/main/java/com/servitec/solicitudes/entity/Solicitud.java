@@ -32,7 +32,7 @@ public class Solicitud {
     String direccion;
 
     @Column(nullable = false)
-    String latitud;
+    Double latitud;
 
     @Column(nullable = false)
     Double longitud;

@@ -1,9 +1,6 @@
 package com.servitec.tecnicos.dto.reserva.response;
 
-import com.servitec.tecnicos.dto.especialidad.response.EspecialidadResponse;
-import com.servitec.tecnicos.dto.tecnico.response.TecnicoResponse;
 import com.servitec.tecnicos.entity.Reserva;
-import com.servitec.tecnicos.entity.Tecnico;
 import com.servitec.tecnicos.enums.EstadoReserva;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

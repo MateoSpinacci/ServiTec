@@ -27,7 +27,10 @@ public class TrabajoController {
                 solicitudService.obtenerTrabajosDelTecnico(tecnicoId);
 
         List<SolicitudResponse> respuestas = trabajos.stream()
-                .map(SolicitudResponse::of)
+                .map(solicitud -> SolicitudResponse.of(
+                        solicitud,
+                        solicitudService.obtenerTecnicoAsignado(solicitud.getId())
+                ))
                 .toList();
 
         return ResponseEntity.ok(respuestas);

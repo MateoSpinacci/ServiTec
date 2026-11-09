@@ -22,20 +22,24 @@ public class SolicitudResponse {
     Long especialidadId;
     String descripcion;
     String direccion;
+    Double latitud;
+    Double longitud;
     LocalDateTime fechaDeseada;
     Integer duracionEstimada;
     EstadoSolicitud estado;
     LocalDateTime fechaCreacion;
 
-    public static SolicitudResponse of(Solicitud solicitud) {
+    public static SolicitudResponse of(Solicitud solicitud, Long tecnicoId) {
         return new SolicitudResponse(
                 solicitud.getId(),
                 solicitud.getClienteId(),
-                solicitud.getTecnicoId(),
+                tecnicoId,
                 solicitud.getEspecialidadId(),
                 solicitud.getDescripcion(),
                 solicitud.getDireccion(),
-                solicitud.getFechaDeseada(),
+                solicitud.getLatitud(),
+                solicitud.getLongitud(),
+                solicitud.getFechaSolicitud(),
                 solicitud.getDuracionEstimada(),
                 solicitud.getEstado(),
                 solicitud.getFechaCreacion()
