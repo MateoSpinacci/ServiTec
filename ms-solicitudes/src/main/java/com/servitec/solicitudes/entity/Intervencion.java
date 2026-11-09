@@ -1,7 +1,10 @@
 package com.servitec.solicitudes.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
@@ -18,18 +21,20 @@ public class Intervencion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false, unique = true)
-    Long solicitudId;
+    @OneToOne
+    @JoinColumn(name = "solicitudes_id", nullable = false)
+    Solicitud solicitud;
+
+    @OneToOne
+    @JoinColumn(name = "asignacion_id", nullable = false)
+    Asignacion asignacion;
 
     @Column(nullable = false)
-    Long tecnicoId;
+    LocalDateTime inicio;
+
+    LocalDateTime fin;
 
     String diagnostico;
 
     String resolucion;
-
-    @Column(nullable = false)
-    LocalDateTime fechaInicio;
-
-    LocalDateTime fechaResolucion;
 }

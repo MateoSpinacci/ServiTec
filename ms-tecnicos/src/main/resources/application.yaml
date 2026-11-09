@@ -15,5 +15,9 @@ spring:
       hibernate:
         format_sql: true
 
+openrouteservice:
+  api-key: ${ORS_API_KEY}
+  base-url: https://api.openrouteservice.org
+
 server:
   port: 8082

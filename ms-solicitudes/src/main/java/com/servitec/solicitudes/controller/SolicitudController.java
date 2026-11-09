@@ -26,6 +26,14 @@ public class SolicitudController {
         this.solicitudService = solicitudService;
     }
 
+    private SolicitudResponse convertirRespuesta(Solicitud solicitud) {
+        Long tecnicoId = solicitudService.obtenerTecnicoAsignado(
+                solicitud.getId()
+        );
+
+        return SolicitudResponse.of(solicitud, tecnicoId);
+    }
+
     @PostMapping
     public ResponseEntity<SolicitudResponse> crear(
             @Valid @RequestBody SolicitudRequest request) {
@@ -36,7 +44,7 @@ public class SolicitudController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(SolicitudResponse.of(nuevaSolicitud));
+                .body(convertirRespuesta(nuevaSolicitud));
     }
 
     @GetMapping
@@ -45,7 +53,7 @@ public class SolicitudController {
         List<Solicitud> solicitudes = solicitudService.obtenerTodas();
 
         List<SolicitudResponse> respuestas = solicitudes.stream()
-                .map(SolicitudResponse::of)
+                .map(this::convertirRespuesta)
                 .toList();
 
         return ResponseEntity.ok(respuestas);
@@ -58,7 +66,7 @@ public class SolicitudController {
         Optional<Solicitud> solicitud = solicitudService.obtenerPorId(id);
 
         return solicitud
-                .map(SolicitudResponse::of)
+                .map(this::convertirRespuesta)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -70,7 +78,7 @@ public class SolicitudController {
 
         Solicitud solicitudCancelada = solicitudService.cancelar(id, clienteId);
 
-        return ResponseEntity.ok(SolicitudResponse.of(solicitudCancelada));
+        return ResponseEntity.ok(convertirRespuesta(solicitudCancelada));
     }
 
     @PostMapping("/{id}/asignaciones")
@@ -80,7 +88,7 @@ public class SolicitudController {
 
         Solicitud solicitudAsignada = solicitudService.asignarTecnico(id, request);
 
-        return ResponseEntity.ok(SolicitudResponse.of(solicitudAsignada));
+        return ResponseEntity.ok(convertirRespuesta(solicitudAsignada));
     }
 
     @PatchMapping("/{id}/inicio")
@@ -90,7 +98,7 @@ public class SolicitudController {
 
         Solicitud solicitud = solicitudService.iniciarTrabajo(id, tecnicoId);
 
-        return ResponseEntity.ok(SolicitudResponse.of(solicitud));
+        return ResponseEntity.ok(convertirRespuesta(solicitud));
     }
 
     @PatchMapping("/{id}/resolucion")
@@ -106,7 +114,7 @@ public class SolicitudController {
                 request
         );
 
-        return ResponseEntity.ok(SolicitudResponse.of(solicitud));
+        return ResponseEntity.ok(convertirRespuesta(solicitud));
     }
 }
 

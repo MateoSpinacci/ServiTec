@@ -5,6 +5,7 @@ import com.servitec.tecnicos.dto.tecnico.request.ActualizarTecnicoRequest;
 import com.servitec.tecnicos.dto.tecnico.request.CrearTecnicoRequest;
 import com.servitec.tecnicos.entity.Especialidad;
 import com.servitec.tecnicos.entity.Tecnico;
+import com.servitec.tecnicos.enums.EstadoReserva;
 import com.servitec.tecnicos.repository.EspecialidadRepository;
 import com.servitec.tecnicos.repository.TecnicoRepository;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

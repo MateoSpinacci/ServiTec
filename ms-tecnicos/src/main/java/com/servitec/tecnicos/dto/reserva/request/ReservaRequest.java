@@ -1,7 +1,8 @@
-package com.servitec.tecnicos.dto.disponibilidad.request;
+package com.servitec.tecnicos.dto.reserva.request;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,12 +15,20 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CrearDisponibilidadRequest {
-    @NotNull(message = "La fecha de inicio es obligatoria")
-    @Future(message = "La fecha de inicio debe ser futura")
+public class ReservaRequest {
+    @Positive
+    @NotNull
+    Long tecnicoId;
+
+    @NotNull
+    @Positive
+    Long solicitudId;
+
+    @NotNull
+    @Future
     LocalDateTime inicio;
 
-    @NotNull(message = "La fecha de fin es obligatoria")
-    @Future(message = "La fecha de fin debe ser futura")
+    @Future
+    @NotNull
     LocalDateTime fin;
 }

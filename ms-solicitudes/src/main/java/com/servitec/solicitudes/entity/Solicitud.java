@@ -19,10 +19,8 @@ public class Solicitud {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false)
+    @Column(name = "cliente_keycloak_id", nullable = false)
     Long clienteId;
-
-    Long tecnicoId;
 
     @Column(nullable = false)
     Long especialidadId;
@@ -34,9 +32,15 @@ public class Solicitud {
     String direccion;
 
     @Column(nullable = false)
-    LocalDateTime fechaDeseada;
+    Double latitud;
 
     @Column(nullable = false)
+    Double longitud;
+
+    @Column(name = "fecha_hora_solicitada", nullable = false)
+    LocalDateTime fechaSolicitud;
+
+    @Column(name = "duracion_estimada_min", nullable = false)
     Integer duracionEstimada;
 
     @Enumerated(EnumType.STRING)
