@@ -261,18 +261,6 @@ public class SolicitudService {
         return solicitudRepository.save(solicitud);
     }
 
-    public List<Solicitud> obtenerTrabajosDelTecnico(String keycloakUserId) {
-        TecnicoResponse tecnico = tecnicosClient.obtenerPorKeycloakUserId(keycloakUserId);
-
-        return solicitudRepository.findTrabajosDelTecnico(
-                tecnico.getId(),
-                List.of(
-                        EstadoSolicitud.ASIGNADA,
-                        EstadoSolicitud.EN_CURSO
-                )
-        );
-    }
-
     private Solicitud buscarSolicitud(Long id) {
         return solicitudRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(

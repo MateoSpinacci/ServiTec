@@ -32,14 +32,14 @@ public class SolicitudController {
     SolicitudService solicitudService;
 
     private SolicitudResponse convertirRespuesta(Solicitud solicitud) {
-        Long tecnicoId = solicitudService.obtenerTecnicoAsignado(solicitud.getId()
-        );
+        Long tecnicoId = solicitudService.obtenerTecnicoAsignado(solicitud.getId());
 
         return SolicitudResponse.of(solicitud, tecnicoId);
     }
 
     @PostMapping
-    public ResponseEntity<SolicitudResponse> crear(@Valid @RequestBody SolicitudRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<SolicitudResponse> crear(@Valid @RequestBody SolicitudRequest request,
+                                                   @AuthenticationPrincipal Jwt jwt) {
         Solicitud nuevaSolicitud = solicitudService.crear(request, jwt.getSubject());
 
         return ResponseEntity

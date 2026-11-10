@@ -3,6 +3,7 @@ package com.servitec.solicitudes.controller;
 import com.servitec.solicitudes.entity.Solicitud;
 import com.servitec.solicitudes.service.SolicitudService;
 import com.servitec.solicitudes.dto.solicitud.response.SolicitudResponse;
+import com.servitec.solicitudes.service.TrabajoService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,13 +19,13 @@ import java.util.List;
 @AllArgsConstructor
 @RequestMapping("/api/v1/trabajos")
 public class TrabajoController {
-
     SolicitudService solicitudService;
+    TrabajoService trabajoService;
 
     @GetMapping
     public ResponseEntity<List<SolicitudResponse>> obtenerTrabajosDelTecnico(@AuthenticationPrincipal Jwt jwt) {
 
-        List<Solicitud> trabajos = solicitudService.obtenerTrabajosDelTecnico(jwt.getSubject());
+        List<Solicitud> trabajos = trabajoService.obtenerTrabajosDelTecnico(jwt.getSubject());
 
         List<SolicitudResponse> respuestas = trabajos.stream()
                 .map(solicitud -> SolicitudResponse.of(

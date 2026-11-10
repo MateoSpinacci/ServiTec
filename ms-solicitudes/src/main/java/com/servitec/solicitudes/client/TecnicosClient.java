@@ -66,11 +66,36 @@ public class TecnicosClient {
                 longitud
         );
 
-        restClient.post()
-                .uri("/api/v1/tecnicos/interno/validar-traslado")
-                .body(request)
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient.post()
+                    .uri("/api/v1/tecnicos/candidatos/interno/validar-traslado")
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity();
+
+        } catch (RestClientResponseException e) {
+
+            if (e.getStatusCode().value() == 409) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "El técnico supera el máximo de 45 minutos de traslado",
+                        e
+                );
+            }
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Error al validar el traslado en ms-tecnicos",
+                    e
+            );
+
+        } catch (ResourceAccessException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudo conectar con ms-tecnicos",
+                    e
+            );
+        }
     }
 
     public List<DisponibilidadResponse> obtenerDisponibilidades(Long tecnicoId) {
