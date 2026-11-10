@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/v1/tecnicos/candidatos/interno/validar-traslado").hasRole("SERVICIO_INTERNO")
                         .requestMatchers(HttpMethod.GET,"/api/v1/tecnicos/interno/keycloak/*").hasRole("SERVICIO_INTERNO")
                         .requestMatchers(HttpMethod.POST, "/api/v1/tecnicos/candidatos").hasAnyRole("ADMIN", "SERVICIO_INTERNO")
