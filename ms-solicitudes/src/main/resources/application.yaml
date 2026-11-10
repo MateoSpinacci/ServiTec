@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: ms-solicitudes
@@ -15,6 +16,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          ms-tecnicos:
+            provider: keycloak
+            client-id: ms-solicitudes
+            client-secret: ${MS_SOLICITUDES_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+            client-authentication-method: client_secret_basic
+        provider:
+          keycloak:
+            token-uri: http://localhost:8180/realms/servitec/protocol/openid-connect/token
 
 servicios:
   tecnicos:

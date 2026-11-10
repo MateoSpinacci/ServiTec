@@ -22,7 +22,7 @@ public class Intervencion {
     Long id;
 
     @OneToOne
-    @JoinColumn(name = "solicitudes_id", nullable = false)
+    @JoinColumn(name = "solicitud_id", nullable = false, unique = true)
     Solicitud solicitud;
 
     @OneToOne
