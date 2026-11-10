@@ -1,6 +1,5 @@
 package com.servitec.solicitudes.service;
 
-// Clases de la aplicación que usa el servicio bajo prueba: cliente, DTOs, entidades, estados y repositorios.
 import com.servitec.solicitudes.client.TecnicosClient;
 import com.servitec.solicitudes.dto.asignacion.request.AsignacionRequest;
 import com.servitec.solicitudes.dto.reserva.request.ReservaRequest;
@@ -16,33 +15,34 @@ import com.servitec.solicitudes.enums.EstadoSolicitud;
 import com.servitec.solicitudes.repository.AsignacionRepository;
 import com.servitec.solicitudes.repository.IntervencionRepository;
 import com.servitec.solicitudes.repository.SolicitudRepository;
-// JUnit define y ejecuta los casos de prueba.
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-// Mockito crea dependencias simuladas y las conecta al servicio para no usar base de datos ni otros servicios.
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-// Tipos de Spring para verificar el estado HTTP de errores del servicio.
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-// Utilidades estándar de Java usadas en fechas y colecciones de prueba.
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-// Aserciones comprueban resultados; las funciones Mockito configuran y verifican las dependencias simuladas.
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SolicitudServiceTest {
+
+    private static final Long SOLICITUD_ID = 10L;
+    private static final Long TECNICO_ID = 20L;
+    private static final Long ESPECIALIDAD_ID = 3L;
+    private static final Long RESERVA_ID = 30L;
+
+    private static final String CLIENTE_ID = "cliente-keycloak-123";
+    private static final String OTRO_CLIENTE_ID = "otro-cliente-keycloak";
 
     @Mock
     private SolicitudRepository solicitudRepository;
@@ -59,172 +59,276 @@ class SolicitudServiceTest {
     @InjectMocks
     private SolicitudService solicitudService;
 
-    // Comprueba que se copien los datos de entrada y que la nueva solicitud quede pendiente.
     @Test
     void crearGuardaSolicitudPendienteConDatosDelRequest() {
         LocalDateTime fechaDeseada = LocalDateTime.now().plusDays(1);
+
         SolicitudRequest request = new SolicitudRequest();
-        request.setEspecialidadId(3L);
+        request.setEspecialidadId(ESPECIALIDAD_ID);
         request.setDescripcion("Reparar una canilla");
         request.setDireccion("Calle 123");
         request.setLatitud(-34.6);
         request.setLongitud(-58.4);
         request.setFechaDeseada(fechaDeseada);
         request.setDuracionEstimada(60);
+
         when(solicitudRepository.save(any(Solicitud.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Solicitud creada = solicitudService.crear(request, 8L);
+        Solicitud creada = solicitudService.crear(request, CLIENTE_ID);
 
-        assertEquals(8L, creada.getClienteId());
-        assertEquals(3L, creada.getEspecialidadId());
-        assertEquals("Reparar una canilla", creada.getDescripcion());
-        assertEquals("Calle 123", creada.getDireccion());
-        assertEquals(-34.6, creada.getLatitud());
-        assertEquals(-58.4, creada.getLongitud());
-        assertEquals(fechaDeseada, creada.getFechaSolicitud());
-        assertEquals(60, creada.getDuracionEstimada());
-        assertEquals(EstadoSolicitud.PENDIENTE, creada.getEstado());
-        assertNotNull(creada.getFechaCreacion());
+        assertAll(
+                () -> assertEquals(CLIENTE_ID, creada.getClienteId()),
+                () -> assertEquals(ESPECIALIDAD_ID, creada.getEspecialidadId()),
+                () -> assertEquals("Reparar una canilla", creada.getDescripcion()),
+                () -> assertEquals("Calle 123", creada.getDireccion()),
+                () -> assertEquals(-34.6, creada.getLatitud()),
+                () -> assertEquals(-58.4, creada.getLongitud()),
+                () -> assertEquals(fechaDeseada, creada.getFechaSolicitud()),
+                () -> assertEquals(60, creada.getDuracionEstimada()),
+                () -> assertEquals(EstadoSolicitud.PENDIENTE, creada.getEstado()),
+                () -> assertNotNull(creada.getFechaCreacion())
+        );
+
         verify(solicitudRepository).save(creada);
     }
 
-    // Comprueba que el cliente dueño pueda cancelar una solicitud pendiente.
     @Test
-    void cancelarCambiaEstadoDeSolicitudPendienteDelCliente() {
-        Solicitud solicitud = solicitud(10L, 8L, EstadoSolicitud.PENDIENTE);
-        when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(solicitudRepository.save(solicitud)).thenReturn(solicitud);
+    void cancelarSolicitudPendienteDelPropietario() {
+        Solicitud solicitud = crearSolicitud(
+                EstadoSolicitud.PENDIENTE, CLIENTE_ID
+        );
 
-        Solicitud cancelada = solicitudService.cancelar(10L, 8L);
+        when(solicitudRepository.findById(SOLICITUD_ID))
+                .thenReturn(Optional.of(solicitud));
+
+        when(solicitudRepository.save(solicitud))
+                .thenReturn(solicitud);
+
+        Solicitud cancelada =
+                solicitudService.cancelar(SOLICITUD_ID, CLIENTE_ID);
 
         assertEquals(EstadoSolicitud.CANCELADA, cancelada.getEstado());
         verify(solicitudRepository).save(solicitud);
     }
 
-    // Comprueba que otro cliente no pueda cancelar la solicitud.
     @Test
-    void cancelarFallaSiLaSolicitudNoPerteneceAlCliente() {
-        when(solicitudRepository.findById(10L))
-                .thenReturn(Optional.of(solicitud(10L, 99L, EstadoSolicitud.PENDIENTE)));
+    void cancelarSolicitudAjenaDevuelveForbidden() {
+        Solicitud solicitud = crearSolicitud(
+                EstadoSolicitud.PENDIENTE, OTRO_CLIENTE_ID
+        );
+
+        when(solicitudRepository.findById(SOLICITUD_ID))
+                .thenReturn(Optional.of(solicitud));
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> solicitudService.cancelar(10L, 8L)
+                () -> solicitudService.cancelar(SOLICITUD_ID, CLIENTE_ID)
         );
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
-        verify(solicitudRepository, never()).save(any(Solicitud.class));
+
+        verify(solicitudRepository, never())
+                .save(any(Solicitud.class));
     }
 
-    // Comprueba que se cree la asignación y que la solicitud pase al estado asignado.
     @Test
-    void asignarTecnicoGuardaAsignacionYActualizaEstado() {
-        Solicitud solicitud = solicitud(10L, 8L, EstadoSolicitud.PENDIENTE);
-        solicitud.setEspecialidadId(3L);
-        solicitud.setFechaSolicitud(LocalDateTime.now().plusDays(1));
+    void cancelarSolicitudInexistenteDevuelveNotFound() {
+        when(solicitudRepository.findById(SOLICITUD_ID))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> solicitudService.cancelar(SOLICITUD_ID, CLIENTE_ID)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+
+        verify(solicitudRepository, never())
+                .save(any(Solicitud.class));
+    }
+
+    @Test
+    void asignarTecnicoCreaReservaYActualizaEstado() {
+        Solicitud solicitud = crearSolicitud(
+                EstadoSolicitud.PENDIENTE, CLIENTE_ID
+        );
+
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+
+        solicitud.setEspecialidadId(ESPECIALIDAD_ID);
+        solicitud.setFechaSolicitud(inicio);
         solicitud.setDuracionEstimada(60);
+
         AsignacionRequest request = new AsignacionRequest();
-        request.setTecnicoId(20L);
+        request.setTecnicoId(TECNICO_ID);
 
         TecnicoResponse tecnico = mock(TecnicoResponse.class);
-        EspecialidadResponse especialidad = mock(EspecialidadResponse.class);
+        EspecialidadResponse especialidad =
+                mock(EspecialidadResponse.class);
         ReservaResponse reserva = mock(ReservaResponse.class);
-        when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(asignacionRepository.existsBySolicitudId(10L)).thenReturn(false);
-        when(tecnicosClient.obtenerPorId(20L)).thenReturn(tecnico);
+
+        when(solicitudRepository.findById(SOLICITUD_ID))
+                .thenReturn(Optional.of(solicitud));
+
+        when(tecnicosClient.obtenerPorId(TECNICO_ID))
+                .thenReturn(tecnico);
+
         when(tecnico.isActivo()).thenReturn(true);
-        when(tecnico.getEspecialidades()).thenReturn(List.of(especialidad));
-        when(especialidad.getId()).thenReturn(3L);
-        when(tecnicosClient.crearReserva(any(ReservaRequest.class))).thenReturn(reserva);
-        when(reserva.getId()).thenReturn(30L);
+
+        when(tecnico.getEspecialidades())
+                .thenReturn(List.of(especialidad));
+
+        when(especialidad.getId())
+                .thenReturn(ESPECIALIDAD_ID);
+
+        when(tecnicosClient.crearReserva(any(ReservaRequest.class)))
+                .thenReturn(reserva);
+
+        when(reserva.getId()).thenReturn(RESERVA_ID);
+
         when(asignacionRepository.saveAndFlush(any(Asignacion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(solicitudRepository.saveAndFlush(solicitud)).thenReturn(solicitud);
 
-        Solicitud asignada = solicitudService.asignarTecnico(10L, request);
+        when(solicitudRepository.saveAndFlush(solicitud))
+                .thenReturn(solicitud);
+
+        Solicitud asignada =
+                solicitudService.asignarTecnico(SOLICITUD_ID, request);
 
         assertEquals(EstadoSolicitud.ASIGNADA, asignada.getEstado());
-        ArgumentCaptor<Asignacion> asignacionCaptor = ArgumentCaptor.forClass(Asignacion.class);
-        verify(asignacionRepository).saveAndFlush(asignacionCaptor.capture());
-        assertEquals(solicitud, asignacionCaptor.getValue().getSolicitud());
-        assertEquals(20L, asignacionCaptor.getValue().getTecnicoId());
-        assertEquals(30L, asignacionCaptor.getValue().getReservaId());
-        verify(tecnicosClient).crearReserva(any(ReservaRequest.class));
+
+        ArgumentCaptor<ReservaRequest> reservaCaptor =
+                ArgumentCaptor.forClass(ReservaRequest.class);
+
+        verify(tecnicosClient).crearReserva(reservaCaptor.capture());
+
+        assertNotNull(reservaCaptor.getValue());
+
+        ArgumentCaptor<Asignacion> asignacionCaptor =
+                ArgumentCaptor.forClass(Asignacion.class);
+
+        verify(asignacionRepository)
+                .saveAndFlush(asignacionCaptor.capture());
+
+        Asignacion asignacionGuardada = asignacionCaptor.getValue();
+
+        assertAll(
+                () -> assertSame(
+                        solicitud, asignacionGuardada.getSolicitud()
+                ),
+                () -> assertEquals(
+                        TECNICO_ID, asignacionGuardada.getTecnicoId()
+                ),
+                () -> assertEquals(
+                        RESERVA_ID, asignacionGuardada.getReservaId()
+                )
+        );
+
         verify(solicitudRepository).saveAndFlush(solicitud);
     }
 
-    // Comprueba que iniciar un trabajo cree una intervención y cambie su estado a en curso.
     @Test
-    void iniciarTrabajoGuardaIntervencionYCambiaEstado() {
-        Solicitud solicitud = solicitud(10L, 8L, EstadoSolicitud.ASIGNADA);
-        Asignacion asignacion = asignacion(solicitud, 20L);
-        when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(asignacionRepository.findBySolicitudId(10L))
-                .thenReturn(Optional.of(asignacion));
-        when(solicitudRepository.save(solicitud)).thenReturn(solicitud);
+    void iniciarTrabajoCreaIntervencionYCambiaEstado() {
+        Solicitud solicitud = crearSolicitud(
+                EstadoSolicitud.ASIGNADA, CLIENTE_ID
+        );
 
-        Solicitud enCurso = solicitudService.iniciarTrabajo(10L, 20L);
+        Asignacion asignacion = crearAsignacion(solicitud, TECNICO_ID);
+
+        when(solicitudRepository.findById(SOLICITUD_ID))
+                .thenReturn(Optional.of(solicitud));
+
+        when(asignacionRepository.findBySolicitudId(SOLICITUD_ID))
+                .thenReturn(Optional.of(asignacion));
+
+        when(solicitudRepository.save(solicitud))
+                .thenReturn(solicitud);
+
+        Solicitud enCurso =
+                solicitudService.iniciarTrabajo(SOLICITUD_ID, TECNICO_ID);
 
         assertEquals(EstadoSolicitud.EN_CURSO, enCurso.getEstado());
-        ArgumentCaptor<Intervencion> intervencionCaptor =
+
+        ArgumentCaptor<Intervencion> captor =
                 ArgumentCaptor.forClass(Intervencion.class);
-        verify(intervencionRepository).save(intervencionCaptor.capture());
-        assertEquals(solicitud, intervencionCaptor.getValue().getSolicitud());
-        assertEquals(asignacion, intervencionCaptor.getValue().getAsignacion());
-        assertNotNull(intervencionCaptor.getValue().getInicio());
+
+        verify(intervencionRepository).save(captor.capture());
+
+        Intervencion intervencion = captor.getValue();
+
+        assertAll(
+                () -> assertSame(solicitud, intervencion.getSolicitud()),
+                () -> assertSame(asignacion, intervencion.getAsignacion()),
+                () -> assertNotNull(intervencion.getInicio())
+        );
+
         verify(solicitudRepository).save(solicitud);
     }
 
-    // Comprueba que resolver un trabajo guarde el diagnóstico, la resolución y el estado final.
     @Test
-    void resolverTrabajoGuardaDiagnosticoResolucionYEstadoFinal() {
-        Solicitud solicitud = solicitud(10L, 8L, EstadoSolicitud.EN_CURSO);
-        Asignacion asignacion = asignacion(solicitud, 20L);
+    void resolverTrabajoGuardaDiagnosticoYResolucion() {
+        Solicitud solicitud = crearSolicitud(
+                EstadoSolicitud.EN_CURSO, CLIENTE_ID
+        );
+
+        Asignacion asignacion = crearAsignacion(solicitud, TECNICO_ID);
         Intervencion intervencion = new Intervencion();
+
         ResolucionRequest request = new ResolucionRequest();
         request.setDiagnostico("Pérdida en la conexión");
         request.setResolucion("Se reemplazó el flexible");
-        when(solicitudRepository.findById(10L)).thenReturn(Optional.of(solicitud));
-        when(asignacionRepository.findBySolicitudId(10L))
+
+        when(solicitudRepository.findById(SOLICITUD_ID))
+                .thenReturn(Optional.of(solicitud));
+
+        when(asignacionRepository.findBySolicitudId(SOLICITUD_ID))
                 .thenReturn(Optional.of(asignacion));
-        when(intervencionRepository.findBySolicitudId(10L))
+
+        when(intervencionRepository.findBySolicitudId(SOLICITUD_ID))
                 .thenReturn(Optional.of(intervencion));
-        when(solicitudRepository.save(solicitud)).thenReturn(solicitud);
 
-        Solicitud resuelta = solicitudService.resolverTrabajo(10L, 20L, request);
+        when(solicitudRepository.save(solicitud))
+                .thenReturn(solicitud);
 
-        assertEquals(EstadoSolicitud.RESUELTA, resuelta.getEstado());
-        assertEquals("Pérdida en la conexión", intervencion.getDiagnostico());
-        assertEquals("Se reemplazó el flexible", intervencion.getResolucion());
-        assertNotNull(intervencion.getFin());
+        Solicitud resuelta = solicitudService.resolverTrabajo(
+                SOLICITUD_ID, TECNICO_ID, request
+        );
+
+        assertAll(
+                () -> assertEquals(
+                        EstadoSolicitud.RESUELTA, resuelta.getEstado()
+                ),
+                () -> assertEquals(
+                        "Pérdida en la conexión",
+                        intervencion.getDiagnostico()
+                ),
+                () -> assertEquals(
+                        "Se reemplazó el flexible",
+                        intervencion.getResolucion()
+                ),
+                () -> assertNotNull(intervencion.getFin())
+        );
+
         verify(intervencionRepository).save(intervencion);
         verify(solicitudRepository).save(solicitud);
     }
 
-    // Comprueba que se informe un error 404 si se intenta operar sobre una solicitud inexistente.
-    @Test
-    void buscarSolicitudInexistenteDevuelveNotFound() {
-        when(solicitudRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> solicitudService.cancelar(10L, 8L)
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(solicitudRepository, never()).save(any(Solicitud.class));
-    }
-
-    private Solicitud solicitud(Long id, Long clienteId, EstadoSolicitud estado) {
+    private Solicitud crearSolicitud(
+            EstadoSolicitud estado,
+            String clienteId
+    ) {
         Solicitud solicitud = new Solicitud();
-        solicitud.setId(id);
+        solicitud.setId(SOLICITUD_ID);
         solicitud.setClienteId(clienteId);
         solicitud.setEstado(estado);
         return solicitud;
     }
 
-    private Asignacion asignacion(Solicitud solicitud, Long tecnicoId) {
+    private Asignacion crearAsignacion(
+            Solicitud solicitud,
+            Long tecnicoId
+    ) {
         Asignacion asignacion = new Asignacion();
         asignacion.setSolicitud(solicitud);
         asignacion.setTecnicoId(tecnicoId);

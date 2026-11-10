@@ -1,6 +1,5 @@
 package com.servitec.tecnicos.service;
 
-// Clases de la aplicación: cliente de rutas, datos de búsqueda/respuesta, entidades y repositorios.
 import com.servitec.tecnicos.client.RutasClient;
 import com.servitec.tecnicos.dto.tecnico.request.CandidatosRequest;
 import com.servitec.tecnicos.dto.tecnico.response.CandidatoResponse;
@@ -10,20 +9,16 @@ import com.servitec.tecnicos.enums.EstadoReserva;
 import com.servitec.tecnicos.repository.DisponibilidadRepository;
 import com.servitec.tecnicos.repository.ReservaRepository;
 import com.servitec.tecnicos.repository.TecnicoRepository;
-// JUnit define y ejecuta los casos de prueba.
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-// Mockito simula repositorios y cliente de rutas, y los inyecta en el servicio.
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// Fecha y lista de Java usadas para preparar horarios y resultados.
 import java.time.LocalDateTime;
 import java.util.List;
 
-// Aserciones comprueban candidatos y Mockito configura las dependencias simuladas.
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,83 +39,208 @@ class CandidatosServiceTest {
     @InjectMocks
     private CandidatosService candidatosService;
 
-    // Comprueba que se incluya un técnico disponible con un traslado de hasta 45 minutos.
-    @Test
-    void buscarCandidatosDevuelveTecnicoDisponibleDentroDelTiempoDeTraslado() {
-        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+    private static final Long TECNICO_ID = 12L;
+    private static final Long ESPECIALIDAD_ID = 3L;
+
+    private static final double LAT_BASE = -34.6;
+    private static final double LON_BASE = -58.4;
+    private static final double LAT_DESTINO = -34.7;
+    private static final double LON_DESTINO = -58.5;
+
+    private CandidatosRequest crearRequest(LocalDateTime inicio) {
         CandidatosRequest request = new CandidatosRequest();
-        request.setEspecialidadId(3L);
+        request.setEspecialidadId(ESPECIALIDAD_ID);
         request.setFechaHoraSolicitada(inicio);
         request.setDuracionEstimadaMin(60);
-        request.setLatitud(-34.7);
-        request.setLongitud(-58.5);
+        request.setLatitud(LAT_DESTINO);
+        request.setLongitud(LON_DESTINO);
+        return request;
+    }
 
+    private Tecnico crearTecnico() {
         Tecnico tecnico = new Tecnico();
-        tecnico.setId(12L);
+        tecnico.setId(TECNICO_ID);
         tecnico.setNombre("Ana");
-        tecnico.setLatitudBase(-34.6);
-        tecnico.setLongitudBase(-58.4);
-        Disponibilidad disponibilidad = new Disponibilidad(
-                tecnico,
-                inicio.minusHours(1),
-                inicio.plusHours(2)
-        );
-        when(tecnicoRepository.buscarActivosPorEspecialidad(3L))
+        tecnico.setActivo(true);
+        tecnico.setLatitudBase(LAT_BASE);
+        tecnico.setLongitudBase(LON_BASE);
+        return tecnico;
+    }
+
+    private Disponibilidad crearDisponibilidad(
+            Tecnico tecnico,
+            LocalDateTime inicio,
+            LocalDateTime fin
+    ) {
+        return new Disponibilidad(tecnico, inicio, fin);
+    }
+
+    private void configurarTecnicoDisponible(
+            Tecnico tecnico,
+            LocalDateTime inicio
+    ) {
+        when(tecnicoRepository.buscarActivosPorEspecialidad(ESPECIALIDAD_ID))
                 .thenReturn(List.of(tecnico));
-        when(disponibilidadRepository.findByTecnicoId(12L))
-                .thenReturn(List.of(disponibilidad));
+
+        when(disponibilidadRepository.findByTecnicoId(TECNICO_ID))
+                .thenReturn(List.of(
+                        crearDisponibilidad(
+                                tecnico,
+                                inicio.minusHours(1),
+                                inicio.plusHours(2)
+                        )
+                ));
+
         when(reservaRepository.existeSuperposicion(
-                12L,
+                TECNICO_ID,
                 inicio,
                 inicio.plusMinutes(60),
                 EstadoReserva.ACTIVA
         )).thenReturn(false);
-        when(rutasClient.calcularDuracionSegundos(-34.6, -58.4, -34.7, -58.5))
-                .thenReturn(61.0);
+    }
 
-        List<CandidatoResponse> candidatos = candidatosService.buscarCandidatos(request);
+    private void configurarTiempoTraslado(double segundos) {
+        when(rutasClient.calcularDuracionSegundos(
+                LAT_BASE, LON_BASE, LAT_DESTINO, LON_DESTINO
+        )).thenReturn(segundos);
+    }
+
+    @Test
+    void buscarCandidatosIncluyeTecnicoDisponible() {
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+        Tecnico tecnico = crearTecnico();
+
+        configurarTecnicoDisponible(tecnico, inicio);
+        configurarTiempoTraslado(61.0);
+
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
 
         assertEquals(1, candidatos.size());
-        assertEquals(12L, candidatos.get(0).getTecnicoId());
+        assertEquals(TECNICO_ID, candidatos.get(0).getTecnicoId());
         assertEquals("Ana", candidatos.get(0).getNombre());
         assertEquals(2L, candidatos.get(0).getTiempoTrasladoMinutos());
     }
 
-    // Comprueba que se excluya a un técnico cuyo traslado supera el límite de 45 minutos.
+    @Test
+    void buscarCandidatosIncluyeTecnicoConTrasladoExactamente45Minutos() {
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+        Tecnico tecnico = crearTecnico();
+
+        configurarTecnicoDisponible(tecnico, inicio);
+        configurarTiempoTraslado(2700.0);
+
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
+
+        assertEquals(1, candidatos.size());
+        assertEquals(45L, candidatos.get(0).getTiempoTrasladoMinutos());
+    }
+
     @Test
     void buscarCandidatosExcluyeTecnicoConTrasladoMayorA45Minutos() {
         LocalDateTime inicio = LocalDateTime.now().plusDays(1);
-        CandidatosRequest request = new CandidatosRequest();
-        request.setEspecialidadId(3L);
-        request.setFechaHoraSolicitada(inicio);
-        request.setDuracionEstimadaMin(60);
-        request.setLatitud(-34.7);
-        request.setLongitud(-58.5);
+        Tecnico tecnico = crearTecnico();
 
-        Tecnico tecnico = new Tecnico();
-        tecnico.setId(12L);
-        tecnico.setLatitudBase(-34.6);
-        tecnico.setLongitudBase(-58.4);
-        Disponibilidad disponibilidad = new Disponibilidad(
-                tecnico,
-                inicio.minusHours(1),
-                inicio.plusHours(2)
-        );
-        when(tecnicoRepository.buscarActivosPorEspecialidad(3L))
+        configurarTecnicoDisponible(tecnico, inicio);
+        configurarTiempoTraslado(2701.0);
+
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
+
+        assertTrue(candidatos.isEmpty());
+    }
+
+    @Test
+    void buscarCandidatosExcluyeTecnicoSinDisponibilidad() {
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+        Tecnico tecnico = crearTecnico();
+
+        when(tecnicoRepository.buscarActivosPorEspecialidad(ESPECIALIDAD_ID))
                 .thenReturn(List.of(tecnico));
-        when(disponibilidadRepository.findByTecnicoId(12L))
-                .thenReturn(List.of(disponibilidad));
+
+        when(disponibilidadRepository.findByTecnicoId(TECNICO_ID))
+                .thenReturn(List.of());
+
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
+
+        assertTrue(candidatos.isEmpty());
+        verifyNoInteractions(rutasClient);
+    }
+
+    @Test
+    void buscarCandidatosExcluyeTecnicoConDisponibilidadInsuficiente() {
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+        Tecnico tecnico = crearTecnico();
+
+        when(tecnicoRepository.buscarActivosPorEspecialidad(ESPECIALIDAD_ID))
+                .thenReturn(List.of(tecnico));
+
+        when(disponibilidadRepository.findByTecnicoId(TECNICO_ID))
+                .thenReturn(List.of(
+                        crearDisponibilidad(
+                                tecnico,
+                                inicio.minusMinutes(30),
+                                inicio.plusMinutes(30)
+                        )
+                ));
+
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
+
+        assertTrue(candidatos.isEmpty());
+        verifyNoInteractions(rutasClient);
+    }
+
+    @Test
+    void buscarCandidatosExcluyeTecnicoConReservaSuperpuesta() {
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+        Tecnico tecnico = crearTecnico();
+
+        when(tecnicoRepository.buscarActivosPorEspecialidad(ESPECIALIDAD_ID))
+                .thenReturn(List.of(tecnico));
+
+        when(disponibilidadRepository.findByTecnicoId(TECNICO_ID))
+                .thenReturn(List.of(
+                        crearDisponibilidad(
+                                tecnico,
+                                inicio.minusHours(1),
+                                inicio.plusHours(2)
+                        )
+                ));
+
         when(reservaRepository.existeSuperposicion(
-                12L,
+                TECNICO_ID,
                 inicio,
                 inicio.plusMinutes(60),
                 EstadoReserva.ACTIVA
-        )).thenReturn(false);
-        when(rutasClient.calcularDuracionSegundos(-34.6, -58.4, -34.7, -58.5))
-                .thenReturn(45 * 60 + 1.0);
+        )).thenReturn(true);
 
-        List<CandidatoResponse> candidatos = candidatosService.buscarCandidatos(request);
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
 
-        assertEquals(0, candidatos.size());
+        assertTrue(candidatos.isEmpty());
+        verifyNoInteractions(rutasClient);
+    }
+
+    @Test
+    void buscarCandidatosDevuelveListaVaciaSiNoHayTecnicosDeLaEspecialidad() {
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1);
+
+        when(tecnicoRepository.buscarActivosPorEspecialidad(ESPECIALIDAD_ID))
+                .thenReturn(List.of());
+
+        List<CandidatoResponse> candidatos =
+                candidatosService.buscarCandidatos(crearRequest(inicio));
+
+        assertNotNull(candidatos);
+        assertTrue(candidatos.isEmpty());
+
+        verifyNoInteractions(
+                disponibilidadRepository,
+                reservaRepository,
+                rutasClient
+        );
     }
 }
