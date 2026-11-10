@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: ms-tecnicos
@@ -15,9 +16,16 @@ spring:
       hibernate:
         format_sql: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/servitec
+
 openrouteservice:
   api-key: ${ORS_API_KEY}
   base-url: https://api.openrouteservice.org
 
 server:
   port: 8082
+
