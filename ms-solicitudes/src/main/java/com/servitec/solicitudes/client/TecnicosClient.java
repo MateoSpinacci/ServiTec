@@ -1,5 +1,6 @@
 package com.servitec.solicitudes.client;
 
+import com.servitec.solicitudes.dto.asignacion.request.ValidarTrasladoRequest;
 import com.servitec.solicitudes.dto.tecnico.response.TecnicoResponse;
 import com.servitec.solicitudes.dto.disponibilidad.response.DisponibilidadResponse;
 import org.springframework.stereotype.Component;
@@ -50,6 +51,49 @@ public class TecnicosClient {
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "No se pudo conectar con ms-tecnicos"
+            );
+        }
+    }
+
+    public void validarTiempoTraslado(
+            Long tecnicoId,
+            Double latitud,
+            Double longitud) {
+
+        ValidarTrasladoRequest request = new ValidarTrasladoRequest(
+                tecnicoId,
+                latitud,
+                longitud
+        );
+
+        try {
+            restClient.post()
+                    .uri("/api/v1/tecnicos/candidatos/interno/validar-traslado")
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity();
+
+        } catch (RestClientResponseException e) {
+
+            if (e.getStatusCode().value() == 409) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "El técnico supera el máximo de 45 minutos de traslado",
+                        e
+                );
+            }
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Error al validar el traslado en ms-tecnicos",
+                    e
+            );
+
+        } catch (ResourceAccessException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudo conectar con ms-tecnicos",
+                    e
             );
         }
     }
@@ -140,6 +184,14 @@ public class TecnicosClient {
                     e
             );
         }
+    }
+
+    public TecnicoResponse obtenerPorKeycloakUserId(String keycloakUserId) {
+        return restClient.get()
+                .uri("/api/v1/tecnicos/interno/keycloak/{keycloakUserId}",
+                        keycloakUserId)
+                .retrieve()
+                .body(TecnicoResponse.class);
     }
 }
 
