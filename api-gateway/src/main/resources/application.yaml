@@ -7,7 +7,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/servitec
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/servitec}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/servitec/protocol/openid-connect/certs}
 
   cloud:
     gateway:
@@ -15,17 +16,17 @@ spring:
         webflux:
           routes:
             - id: ms-solicitudes
-              uri: http://localhost:8080
+              uri: ${SERVICES_SOLICITUDES_URL:http://localhost:8080}
               predicates:
                 - Path=/api/v1/solicitudes/**
 
             - id: ms-trabajos
-              uri: http://localhost:8080
+              uri: ${SERVICES_SOLICITUDES_URL:http://localhost:8080}
               predicates:
                 - Path=/api/v1/trabajos/**
 
             - id: ms-tecnicos
-              uri: http://localhost:8082
+              uri: ${SERVICES_TECNICOS_URL:http://localhost:8082}
               predicates:
                 - Path=/api/v1/tecnicos/**,/api/v1/especialidades/**
 
