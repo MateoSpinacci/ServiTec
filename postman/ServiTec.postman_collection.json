@@ -1,0 +1,2083 @@
+{
+  "info": {
+    "_postman_id": "5410a29b-e59a-43e5-b88d-43645c67b97b",
+    "name": "ServiTec - API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54409681",
+    "_collection_link": "https://go.postman.co/collection/54409681-5410a29b-e59a-43e5-b88d-43645c67b97b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Autenticacion",
+      "item": [
+        {
+          "name": "POST - Obtener token ADMIN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token obtenido correctamente\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const response = pm.response.json();\r\n    pm.environment.set(\"tokenAdmin\", response.access_token);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "servitec-api"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usernameAdmin}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordAdmin}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/servitec/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "servitec",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Obtener token CLIENTE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token CLIENTE obtenido\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n    pm.environment.set(\"tokenCliente\", data.access_token);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "servitec-api"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usernameCliente}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordCliente}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/servitec/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "servitec",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Obtener token TECNICO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token TECNICO obtenido\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n    pm.environment.set(\"tokenTecnico\", data.access_token);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "servitec-api"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usernameTecnico}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordTecnico}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/servitec/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "servitec",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Tecnicos",
+      "item": [
+        {
+          "name": "POST - Crear especialidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Especialidad creada correctamente\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n\r\n    pm.expect(data.id).to.exist;\r\n\r\n    pm.environment.set(\"especialidadId\", data.id);\r\n}"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const especialidadYaExiste =\r\n    pm.environment.get(\"especialidadYaExiste\") === \"true\";\r\n\r\nif (especialidadYaExiste) {\r\n    console.log(\"Electricidad ya existe. No es necesario crearla.\");\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Electricidad\",\r\n  \"descripcion\": \"Instalación, mantenimiento y reparación de sistemas eléctricos\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar especialidades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"La respuesta es un JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"La respuesta es una lista\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body).to.be.an(\"array\");\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const especialidades = pm.response.json();\r\n\r\n    const electricidad = especialidades.find(\r\n        e => e.nombre === \"Electricidad\"\r\n    );\r\n\r\n    if (electricidad) {\r\n        pm.environment.set(\"especialidadId\", electricidad.id);\r\n        pm.environment.set(\"especialidadYaExiste\", \"true\");\r\n    } else {\r\n        pm.environment.unset(\"especialidadId\");\r\n        pm.environment.set(\"especialidadYaExiste\", \"false\");\r\n    }\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Registrar técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Técnico registrado correctamente\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La respuesta contiene un ID\", function () {\r\n        pm.expect(data.id).to.exist;\r\n    });\r\n\r\n    pm.environment.set(\"tecnicoId\", data.id);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"keycloakUserId\": \"{{keycloakUserIdTecnico1}}\",\r\n  \"nombre\": \"Juan Pérez\",\r\n  \"telefono\": \"3514567890\",\r\n  \"direccionBase\": \"Córdoba, Argentina\",\r\n  \"latitudBase\": -31.4201,\r\n  \"longitudBase\": -64.1888,\r\n  \"especialidadesId\": [\r\n    {{especialidadId}}\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Buscar técnico por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"Devuelve el técnico solicitado\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"El técnico está activo\", function () {\r\n        pm.expect(data.activo).to.eql(true);\r\n    });\r\n\r\n    pm.test(\"El técnico pertenece al usuario correcto\", function () {\r\n        pm.expect(data.keycloakUserId).to.eql(\r\n            pm.environment.get(\"keycloakUserIdTecnico1\")\r\n        );\r\n    });\r\n\r\n    pm.test(\"El técnico tiene especialidades\", function () {\r\n        pm.expect(data.especialidades).to.be.an(\"array\").that.is.not.empty;\r\n    });\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar técnicos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La respuesta es una lista\", function () {\r\n        pm.expect(data).to.be.an(\"array\");\r\n    });\r\n\r\n    pm.test(\"Contiene al técnico creado\", function () {\r\n        const tecnicoId = Number(pm.environment.get(\"tecnicoId\"));\r\n\r\n        const tecnico = data.find(t => t.id === tecnicoId);\r\n\r\n        pm.expect(tecnico).to.exist;\r\n        pm.expect(tecnico.nombre).to.eql(\"Juan Pérez\");\r\n        pm.expect(tecnico.activo).to.eql(true);\r\n    });\r\n}\r\n\r\nif (pm.response.code === 200) {\r\n    const tecnicos = pm.response.json();\r\n\r\n    const keycloakUserId = pm.environment.get(\r\n        \"keycloakUserIdTecnico1\"\r\n    );\r\n\r\n    const tecnico = tecnicos.find(\r\n        t => t.keycloakUserId === keycloakUserId\r\n    );\r\n\r\n    if (tecnico) {\r\n        pm.environment.set(\"tecnicoId\", tecnico.id);\r\n        pm.environment.set(\"tecnicoYaExiste\", \"true\");\r\n    } else {\r\n        pm.environment.unset(\"tecnicoId\");\r\n        pm.environment.set(\"tecnicoYaExiste\", \"false\");\r\n    }\r\n}\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Actualizar técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"El ID del técnico no cambió\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"El teléfono fue actualizado\", function () {\r\n        pm.expect(data.telefono).to.eql(\"3515551234\");\r\n    });\r\n\r\n    pm.test(\"El nombre original se conserva\", function () {\r\n        pm.expect(data.nombre).to.eql(\"Juan Pérez\");\r\n    });\r\n\r\n    pm.test(\"El técnico sigue activo\", function () {\r\n        pm.expect(data.activo).to.eql(true);\r\n    });\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"telefono\": \"3515551234\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Crear disponibilidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n    const request = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));\r\n\r\n    pm.test(\"La disponibilidad fue creada correctamente\", function () {\r\n        pm.expect(data.id).to.be.a(\"number\");\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n        pm.expect(data.inicio).to.eql(request.inicio);\r\n        pm.expect(data.fin).to.eql(request.fin);\r\n    });\r\n\r\n    pm.environment.set(\"disponibilidadId\", data.id);\r\n    pm.environment.set(\"disponibilidadInicio\", request.inicio);\r\n    pm.environment.set(\"disponibilidadFin\", request.fin);\r\n}\r\n\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\nconst fecha = new Date();\r\nfecha.setDate(fecha.getDate() + 7);\r\nfecha.setHours(10, 0, 0, 0);\r\n\r\nfunction formatoLocal(fecha) {\r\n    const dos = n => String(n).padStart(2, \"0\");\r\n\r\n    return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}T${dos(fecha.getHours())}:${dos(fecha.getMinutes())}:00`;\r\n}\r\n\r\nconst inicio = new Date(fecha);\r\nconst fin = new Date(fecha);\r\nfin.setHours(18);\r\n\r\npm.environment.set(\"disponibilidadInicioNueva\", formatoLocal(inicio));\r\npm.environment.set(\"disponibilidadFinNueva\", formatoLocal(fin));\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"inicio\": \"{{disponibilidadInicioNueva}}\",\r\n  \"fin\": \"{{disponibilidadFinNueva}}\"\r\n}\r\n\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}/disponibilidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}",
+                "disponibilidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar disponibilidades del técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La respuesta es una lista\", function () {\r\n        pm.expect(data).to.be.an(\"array\");\r\n    });\r\n\r\n    pm.test(\"La disponibilidad tiene los horarios esperados\", function () {\r\n        const id = Number(pm.environment.get(\"disponibilidadId\"));\r\n        const disponibilidad = data.find(d => d.id === id);\r\n\r\n        pm.expect(disponibilidad).to.exist;\r\n        pm.expect(disponibilidad.inicio).to.eql(\r\n            pm.environment.get(\"disponibilidadInicio\")\r\n        );\r\n        pm.expect(disponibilidad.fin).to.eql(\r\n            pm.environment.get(\"disponibilidadFin\")\r\n        );\r\n    });\r\n}\r\n\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}/disponibilidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}",
+                "disponibilidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Actualizar disponibilidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n    const request = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));\r\n\r\n    pm.test(\"La disponibilidad fue actualizada correctamente\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"disponibilidadId\"))\r\n        );\r\n        pm.expect(data.inicio).to.eql(request.inicio);\r\n        pm.expect(data.fin).to.eql(request.fin);\r\n    });\r\n\r\n    pm.environment.set(\"disponibilidadInicio\", request.inicio);\r\n    pm.environment.set(\"disponibilidadFin\", request.fin);\r\n}\r\n\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const fecha = new Date();\r\nfecha.setDate(fecha.getDate() + 7);\r\n\r\nconst dos = n => String(n).padStart(2, \"0\");\r\n\r\nfunction formatoLocal(fecha) {\r\n    return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}T${dos(fecha.getHours())}:${dos(fecha.getMinutes())}:00`;\r\n}\r\n\r\nfecha.setHours(9, 0, 0, 0);\r\npm.environment.set(\"disponibilidadInicioNueva\", formatoLocal(fecha));\r\n\r\nfecha.setHours(19, 0, 0, 0);\r\npm.environment.set(\"disponibilidadFinNueva\", formatoLocal(fecha));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"inicio\": \"{{disponibilidadInicioNueva}}\",\r\n  \"fin\": \"{{disponibilidadFinNueva}}\"\r\n}\r\n\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}/disponibilidades/{{disponibilidadId}}",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}",
+                "disponibilidades",
+                "{{disponibilidadId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Solicitudes",
+      "item": [
+        {
+          "name": "POST - Crear solicitud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n    const request = JSON.parse(\r\n        pm.variables.replaceIn(pm.request.body.raw)\r\n    );\r\n\r\n    pm.test(\"Se generó un ID\", function () {\r\n        pm.expect(data.id).to.be.a(\"number\");\r\n    });\r\n\r\n    pm.test(\"La solicitud queda PENDIENTE\", function () {\r\n        pm.expect(data.estado).to.eql(\"PENDIENTE\");\r\n        pm.expect(data.tecnicoId).to.be.null;\r\n    });\r\n\r\n    pm.test(\"Los datos coinciden con lo enviado\", function () {\r\n        pm.expect(data.especialidadId).to.eql(request.especialidadId);\r\n        pm.expect(data.descripcion).to.eql(request.descripcion);\r\n        pm.expect(data.fechaDeseada).to.eql(request.fechaDeseada);\r\n        pm.expect(data.duracionEstimada).to.eql(request.duracionEstimada);\r\n    });\r\n\r\n    pm.test(\"Se registra el cliente autenticado\", function () {\r\n        pm.expect(data.clienteId).to.be.a(\"string\").that.is.not.empty;\r\n    });\r\n\r\n    pm.environment.set(\"solicitudId\", data.id);\r\n    pm.environment.set(\"solicitudFechaDeseada\", request.fechaDeseada);\r\n    pm.environment.set(\"solicitudEstadoEsperado\", \"PENDIENTE\");\r\n}\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\nconst fecha = new Date();\r\nfecha.setDate(fecha.getDate() + 7);\r\nfecha.setHours(11, 0, 0, 0);\r\n\r\nconst dos = n => String(n).padStart(2, \"0\");\r\n\r\nconst fechaDeseada =\r\n    `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}T${dos(fecha.getHours())}:${dos(fecha.getMinutes())}:00`;\r\n\r\npm.environment.set(\"fechaDeseadaNueva\", fechaDeseada);\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"especialidadId\": {{especialidadId}},\r\n  \"descripcion\": \"Necesito reparar un tomacorriente que dejó de funcionar\",\r\n  \"direccion\": \"Nueva Córdoba, Córdoba, Argentina\",\r\n  \"latitud\": -31.4300,\r\n  \"longitud\": -64.1850,\r\n  \"fechaDeseada\": \"{{fechaDeseadaNueva}}\",\r\n  \"duracionEstimada\": 60\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Buscar solicitud por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"Devuelve la solicitud correcta\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"La solicitud tiene el estado esperado\", function () {\r\n        pm.expect(data.estado).to.eql(\r\n            pm.environment.get(\"solicitudEstadoEsperado\")\r\n        );\r\n    });\r\n\r\n    pm.test(\"Conserva la fecha solicitada\", function () {\r\n        pm.expect(data.fechaDeseada).to.eql(\r\n            pm.environment.get(\"solicitudFechaDeseada\")\r\n        );\r\n    });\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar solicitudes pendientes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La respuesta es una lista\", function () {\r\n        pm.expect(data).to.be.an(\"array\");\r\n    });\r\n\r\n    pm.test(\"Todas las solicitudes están PENDIENTES\", function () {\r\n        data.forEach(solicitud => {\r\n            pm.expect(solicitud.estado).to.eql(\"PENDIENTE\");\r\n        });\r\n    });\r\n\r\n    pm.test(\"Contiene la solicitud que creamos\", function () {\r\n        const solicitudId = Number(\r\n            pm.environment.get(\"solicitudId\")\r\n        );\r\n\r\n        const solicitud = data.find(s => s.id === solicitudId);\r\n\r\n        pm.expect(solicitud).to.exist;\r\n        pm.expect(solicitud.tecnicoId).to.be.null;\r\n    });\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes?estado=PENDIENTE",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Flujo completo",
+      "item": [
+        {
+          "name": "POST - Asignar técnico a solicitud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La solicitud quedó ASIGNADA\", function () {\r\n        pm.expect(data.estado).to.eql(\"ASIGNADA\");\r\n    });\r\n\r\n    pm.test(\"Se asignó el técnico correcto\", function () {\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"Se mantiene la solicitud original\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.environment.set(\"solicitudEstadoEsperado\", data.estado);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tecnicoId\": {{tecnicoId}}\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/asignaciones",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "asignaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Iniciar trabajo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La solicitud pasó a EN_CURSO\", function () {\r\n        pm.expect(data.estado).to.eql(\"EN_CURSO\");\r\n    });\r\n\r\n    pm.test(\"Es la solicitud correcta\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"Conserva el técnico asignado\", function () {\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.environment.set(\"solicitudEstadoEsperado\", \"EN_CURSO\");\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/inicio",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "inicio"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Resolver trabajo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La solicitud quedó RESUELTA\", function () {\r\n        pm.expect(data.estado).to.eql(\"RESUELTA\");\r\n    });\r\n\r\n    pm.test(\"Es la solicitud correcta\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"Conserva el técnico asignado\", function () {\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.environment.set(\"solicitudEstadoEsperado\", data.estado);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"diagnostico\": \"El tomacorriente presentaba un falso contacto debido al deterioro de los cables.\",\r\n  \"resolucion\": \"Se reemplazó el tomacorriente y se verificó el funcionamiento correcto de la instalación.\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/resolucion",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "resolucion"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Casos negativos",
+      "item": [
+        {
+          "name": "GET - Especialidades sin JWT (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza peticiones sin autenticación\", function () {\r\n    pm.response.to.have.status(401);\r\n});\r\n\r\npm.test(\"No devuelve la lista de especialidades\", function () {\r\n    pm.expect(pm.response.text()).not.to.match(\r\n        /^\\s*\\[/\r\n    );\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Crear especialidad sin permisos (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 403 Forbidden\", function () {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"El cliente no puede crear especialidades\", function () {\r\n    pm.expect(pm.response.code).to.eql(403);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Gasista\",\r\n  \"descripcion\": \"Instalación y mantenimiento de instalaciones de gas\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Especialidad con datos inválidos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"La petición fue rechazada por datos inválidos\", function () {\r\n    pm.expect(pm.response.code).to.eql(400);\r\n});\r\n\r\npm.test(\"No devuelve una especialidad creada\", function () {\r\n    const body = pm.response.text();\r\n\r\n    if (body) {\r\n        const data = pm.response.json();\r\n        pm.expect(data).not.to.have.property(\"id\");\r\n    }\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"\",\r\n  \"descripcion\": \"Instalación y reparación de sistemas eléctricos\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Técnico inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"No devuelve un técnico válido\", function () {\r\n    const body = pm.response.text();\r\n\r\n    if (body) {\r\n        const data = pm.response.json();\r\n\r\n        pm.expect(data).not.to.have.property(\r\n            \"id\",\r\n            999999999\r\n        );\r\n    }\r\n});\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/999999999",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "999999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Disponibilidad superpuesta (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza la disponibilidad superpuesta\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"No permite registrar el intervalo duplicado\", function () {\r\n    pm.expect(pm.response.code).to.eql(409);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"inicio\": \"{{disponibilidadInicio}}\",\r\n  \"fin\": \"{{disponibilidadFin}}\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}/disponibilidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}",
+                "disponibilidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Técnico duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza un usuario de Keycloak duplicado\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"No se creó un segundo técnico\", function () {\r\n    pm.expect(pm.response.code).to.eql(409);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"keycloakUserId\": \"{{keycloakUserIdTecnico1}}\",\r\n  \"nombre\": \"Juan Pérez Duplicado\",\r\n  \"telefono\": \"3515559999\",\r\n  \"direccionBase\": \"Córdoba, Argentina\",\r\n  \"latitudBase\": -31.4201,\r\n  \"longitudBase\": -64.1888,\r\n  \"especialidadesId\": [\r\n    {{especialidadId}}\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Asignar solicitud resuelta (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza asignar una solicitud resuelta\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"No devuelve una asignación exitosa\", function () {\r\n    pm.expect(pm.response.code).not.to.be.oneOf([200, 201, 204]);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tecnicoId\": {{tecnicoId}}\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/asignaciones",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "asignaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Iniciar solicitud resuelta (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza iniciar una solicitud resuelta\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"No permite una transición de estado inválida\", function () {\r\n    pm.expect(pm.response.code).not.to.be.oneOf([\r\n        200, 201, 204\r\n    ]);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/inicio",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "inicio"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Ejecución automatizada",
+      "item": [
+        {
+          "name": "POST - Obtener token ADMIN Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token obtenido correctamente\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const response = pm.response.json();\r\n    pm.environment.set(\"tokenAdmin\", response.access_token);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "servitec-api"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usernameAdmin}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordAdmin}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/servitec/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "servitec",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Obtener token CLIENTE Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token CLIENTE obtenido\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n    pm.environment.set(\"tokenCliente\", data.access_token);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "servitec-api"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usernameCliente}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordCliente}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/servitec/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "servitec",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Obtener token TECNICO Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token TECNICO obtenido\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n    pm.environment.set(\"tokenTecnico\", data.access_token);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "servitec-api"
+                },
+                {
+                  "key": "username",
+                  "value": "{{usernameTecnico}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{passwordTecnico}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/servitec/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "servitec",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "RUN - Listar especialidades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"La respuesta es un JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"La respuesta es una lista\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body).to.be.an(\"array\");\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const especialidades = pm.response.json();\r\n\r\n    const electricidad = especialidades.find(\r\n        e => e.nombre === \"Electricidad\"\r\n    );\r\n\r\n    if (electricidad) {\r\n        pm.environment.set(\"especialidadId\", electricidad.id);\r\n        pm.environment.set(\"especialidadYaExiste\", \"true\");\r\n    } else {\r\n        pm.environment.unset(\"especialidadId\");\r\n        pm.environment.set(\"especialidadYaExiste\", \"false\");\r\n    }\r\n}\r\n\r\nif (pm.response.code === 200) {\r\n    const yaExiste =\r\n        pm.environment.get(\"especialidadYaExiste\") === \"true\";\r\n\r\n    if (yaExiste) {\r\n        pm.execution.setNextRequest(\"RUN - Listar técnicos\");\r\n    } else {\r\n        pm.execution.setNextRequest(\"RUN - Crear especialidad\");\r\n    }\r\n}\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "RUN - Crear especialidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Especialidad creada correctamente\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n\r\n    pm.expect(data.id).to.exist;\r\n\r\n    pm.environment.set(\"especialidadId\", data.id);\r\n}"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const especialidadYaExiste =\r\n    pm.environment.get(\"especialidadYaExiste\") === \"true\";\r\n\r\nif (especialidadYaExiste) {\r\n    console.log(\"Electricidad ya existe. No es necesario crearla.\");\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Electricidad\",\r\n  \"descripcion\": \"Instalación, mantenimiento y reparación de sistemas eléctricos\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "RUN - Listar técnicos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"La consulta de técnicos responde 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"La respuesta es una lista\", function () {\r\n    pm.expect(pm.response.json()).to.be.an(\"array\");\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const tecnicos = pm.response.json();\r\n\r\n    const keycloakUserId = pm.environment.get(\r\n        \"keycloakUserIdTecnico1\"\r\n    );\r\n\r\n    const tecnico = tecnicos.find(\r\n        t => t.keycloakUserId === keycloakUserId\r\n    );\r\n\r\n    if (tecnico) {\r\n        pm.environment.set(\"tecnicoId\", tecnico.id);\r\n        pm.environment.set(\"tecnicoYaExiste\", \"true\");\r\n    } else {\r\n        pm.environment.unset(\"tecnicoId\");\r\n        pm.environment.set(\"tecnicoYaExiste\", \"false\");\r\n    }\r\n}\r\n\r\nif (pm.response.code === 200) {\r\n    const yaExiste =\r\n        pm.environment.get(\"tecnicoYaExiste\") === \"true\";\r\n\r\n    if (yaExiste) {\r\n        pm.execution.setNextRequest(\"RUN - Crear disponibilidad\");\r\n    } else {\r\n        pm.execution.setNextRequest(\"RUN - Registrar técnico\");\r\n    }\r\n}\r\n\r\n\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "RUN - Registrar técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Técnico registrado correctamente\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La respuesta contiene un ID\", function () {\r\n        pm.expect(data.id).to.exist;\r\n    });\r\n\r\n    pm.environment.set(\"tecnicoId\", data.id);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"keycloakUserId\": \"{{keycloakUserIdTecnico1}}\",\r\n  \"nombre\": \"Juan Pérez\",\r\n  \"telefono\": \"3514567890\",\r\n  \"direccionBase\": \"Córdoba, Argentina\",\r\n  \"latitudBase\": -31.4201,\r\n  \"longitudBase\": -64.1888,\r\n  \"especialidadesId\": [\r\n    {{especialidadId}}\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "RUN - Crear disponibilidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n    const request = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));\r\n\r\n    pm.test(\"La disponibilidad fue creada correctamente\", function () {\r\n        pm.expect(data.id).to.be.a(\"number\");\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n        pm.expect(data.inicio).to.eql(request.inicio);\r\n        pm.expect(data.fin).to.eql(request.fin);\r\n    });\r\n\r\n    pm.environment.set(\"disponibilidadId\", data.id);\r\n    pm.environment.set(\"disponibilidadInicio\", request.inicio);\r\n    pm.environment.set(\"disponibilidadFin\", request.fin);\r\n}\r\n\r\nif (pm.response.code === 201) {\r\n    const diasActuales = Number(\r\n        pm.environment.get(\"runnerDiasExtra\") || 0\r\n    );\r\n\r\n    pm.environment.set(\r\n        \"runnerDiasExtra\",\r\n        String(diasActuales + 1)\r\n    );\r\n}\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const fecha = new Date();\r\n\r\nconst diasExtra = Number(\r\n    pm.environment.get(\"runnerDiasExtra\") || 0\r\n);\r\n\r\nfecha.setDate(fecha.getDate() + 7 + diasExtra);\r\nfecha.setHours(10, 0, 0, 0);\r\n\r\nconst inicio = new Date(fecha);\r\n\r\nfecha.setHours(18, 0, 0, 0);\r\nconst fin = new Date(fecha);\r\n\r\nfunction formatoLocal(fecha) {\r\n    const pad = n => String(n).padStart(2, \"0\");\r\n\r\n    return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}T${pad(fecha.getHours())}:${pad(fecha.getMinutes())}:00`;\r\n}\r\n\r\npm.environment.set(\r\n    \"disponibilidadInicioNueva\",\r\n    formatoLocal(inicio)\r\n);\r\n\r\npm.environment.set(\r\n    \"disponibilidadFinNueva\",\r\n    formatoLocal(fin)\r\n);\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"inicio\": \"{{disponibilidadInicioNueva}}\",\r\n  \"fin\": \"{{disponibilidadFinNueva}}\"\r\n}\r\n\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/tecnicos/{{tecnicoId}}/disponibilidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "tecnicos",
+                "{{tecnicoId}}",
+                "disponibilidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Crear solicitud Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const data = pm.response.json();\r\n    const request = JSON.parse(\r\n        pm.variables.replaceIn(pm.request.body.raw)\r\n    );\r\n\r\n    pm.test(\"Se generó un ID\", function () {\r\n        pm.expect(data.id).to.be.a(\"number\");\r\n    });\r\n\r\n    pm.test(\"La solicitud queda PENDIENTE\", function () {\r\n        pm.expect(data.estado).to.eql(\"PENDIENTE\");\r\n        pm.expect(data.tecnicoId).to.be.null;\r\n    });\r\n\r\n    pm.test(\"Los datos coinciden con lo enviado\", function () {\r\n        pm.expect(data.especialidadId).to.eql(request.especialidadId);\r\n        pm.expect(data.descripcion).to.eql(request.descripcion);\r\n        pm.expect(data.fechaDeseada).to.eql(request.fechaDeseada);\r\n        pm.expect(data.duracionEstimada).to.eql(request.duracionEstimada);\r\n    });\r\n\r\n    pm.test(\"Se registra el cliente autenticado\", function () {\r\n        pm.expect(data.clienteId).to.be.a(\"string\").that.is.not.empty;\r\n    });\r\n\r\n    pm.environment.set(\"solicitudId\", data.id);\r\n    pm.environment.set(\"solicitudFechaDeseada\", request.fechaDeseada);\r\n    pm.environment.set(\"solicitudEstadoEsperado\", \"PENDIENTE\");\r\n}\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const inicioDisponibilidad = pm.environment.get(\r\n    \"disponibilidadInicio\"\r\n);\r\n\r\nif (!inicioDisponibilidad) {\r\n    throw new Error(\r\n        \"No existe disponibilidadInicio. Ejecutá primero la creación de disponibilidad.\"\r\n    );\r\n}\r\n\r\nconst fecha = new Date(inicioDisponibilidad);\r\nfecha.setHours(fecha.getHours() + 1);\r\n\r\nfunction formatoLocal(fecha) {\r\n    const pad = n => String(n).padStart(2, \"0\");\r\n\r\n    return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}T${pad(fecha.getHours())}:${pad(fecha.getMinutes())}:00`;\r\n}\r\n\r\npm.environment.set(\r\n    \"fechaDeseadaNueva\",\r\n    formatoLocal(fecha)\r\n);\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"especialidadId\": {{especialidadId}},\r\n  \"descripcion\": \"Necesito reparar un tomacorriente que dejó de funcionar\",\r\n  \"direccion\": \"Nueva Córdoba, Córdoba, Argentina\",\r\n  \"latitud\": -31.4300,\r\n  \"longitud\": -64.1850,\r\n  \"fechaDeseada\": \"{{fechaDeseadaNueva}}\",\r\n  \"duracionEstimada\": 60\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Buscar solicitud por ID Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"Devuelve la solicitud correcta\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"La solicitud tiene el estado esperado\", function () {\r\n        pm.expect(data.estado).to.eql(\r\n            pm.environment.get(\"solicitudEstadoEsperado\")\r\n        );\r\n    });\r\n\r\n    pm.test(\"Conserva la fecha solicitada\", function () {\r\n        pm.expect(data.fechaDeseada).to.eql(\r\n            pm.environment.get(\"solicitudFechaDeseada\")\r\n        );\r\n    });\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar solicitudes pendientes Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La respuesta es una lista\", function () {\r\n        pm.expect(data).to.be.an(\"array\");\r\n    });\r\n\r\n    pm.test(\"Todas las solicitudes están PENDIENTES\", function () {\r\n        data.forEach(solicitud => {\r\n            pm.expect(solicitud.estado).to.eql(\"PENDIENTE\");\r\n        });\r\n    });\r\n\r\n    pm.test(\"Contiene la solicitud que creamos\", function () {\r\n        const solicitudId = Number(\r\n            pm.environment.get(\"solicitudId\")\r\n        );\r\n\r\n        const solicitud = data.find(s => s.id === solicitudId);\r\n\r\n        pm.expect(solicitud).to.exist;\r\n        pm.expect(solicitud.tecnicoId).to.be.null;\r\n    });\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes?estado=PENDIENTE",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Asignar técnico a solicitud Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La solicitud quedó ASIGNADA\", function () {\r\n        pm.expect(data.estado).to.eql(\"ASIGNADA\");\r\n    });\r\n\r\n    pm.test(\"Se asignó el técnico correcto\", function () {\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"Se mantiene la solicitud original\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.environment.set(\"solicitudEstadoEsperado\", data.estado);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tecnicoId\": {{tecnicoId}}\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/asignaciones",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "asignaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Iniciar trabajo Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La solicitud pasó a EN_CURSO\", function () {\r\n        pm.expect(data.estado).to.eql(\"EN_CURSO\");\r\n    });\r\n\r\n    pm.test(\"Es la solicitud correcta\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"Conserva el técnico asignado\", function () {\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.environment.set(\"solicitudEstadoEsperado\", \"EN_CURSO\");\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/inicio",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "inicio"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Resolver trabajo Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const data = pm.response.json();\r\n\r\n    pm.test(\"La solicitud quedó RESUELTA\", function () {\r\n        pm.expect(data.estado).to.eql(\"RESUELTA\");\r\n    });\r\n\r\n    pm.test(\"Es la solicitud correcta\", function () {\r\n        pm.expect(data.id).to.eql(\r\n            Number(pm.environment.get(\"solicitudId\"))\r\n        );\r\n    });\r\n\r\n    pm.test(\"Conserva el técnico asignado\", function () {\r\n        pm.expect(data.tecnicoId).to.eql(\r\n            Number(pm.environment.get(\"tecnicoId\"))\r\n        );\r\n    });\r\n\r\n    pm.environment.set(\"solicitudEstadoEsperado\", data.estado);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"diagnostico\": \"El tomacorriente presentaba un falso contacto debido al deterioro de los cables.\",\r\n  \"resolucion\": \"Se reemplazó el tomacorriente y se verificó el funcionamiento correcto de la instalación.\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/resolucion",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "resolucion"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Especialidades sin JWT (401) Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza peticiones sin autenticación\", function () {\r\n    pm.response.to.have.status(401);\r\n});\r\n\r\npm.test(\"No devuelve la lista de especialidades\", function () {\r\n    pm.expect(pm.response.text()).not.to.match(\r\n        /^\\s*\\[/\r\n    );\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Crear especialidad sin permisos (403) Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Devuelve HTTP 403 Forbidden\", function () {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"El cliente no puede crear especialidades\", function () {\r\n    pm.expect(pm.response.code).to.eql(403);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Gasista\",\r\n  \"descripcion\": \"Instalación y mantenimiento de instalaciones de gas\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlTecnicos}}/especialidades",
+              "host": [
+                "{{baseUrlTecnicos}}"
+              ],
+              "path": [
+                "especialidades"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Asignar solicitud resuelta (409) Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza asignar una solicitud resuelta\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"No devuelve una asignación exitosa\", function () {\r\n    pm.expect(pm.response.code).not.to.be.oneOf([200, 201, 204]);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tecnicoId\": {{tecnicoId}}\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/asignaciones",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "asignaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Iniciar solicitud resuelta (409) Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechaza iniciar una solicitud resuelta\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"No permite una transición de estado inválida\", function () {\r\n    pm.expect(pm.response.code).not.to.be.oneOf([\r\n        200, 201, 204\r\n    ]);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlSolicitudes}}/solicitudes/{{solicitudId}}/inicio",
+              "host": [
+                "{{baseUrlSolicitudes}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{solicitudId}}",
+                "inicio"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
