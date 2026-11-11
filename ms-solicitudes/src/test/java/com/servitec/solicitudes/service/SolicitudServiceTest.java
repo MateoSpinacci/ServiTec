@@ -41,8 +41,9 @@ class SolicitudServiceTest {
     private static final Long ESPECIALIDAD_ID = 3L;
     private static final Long RESERVA_ID = 30L;
 
-    private static final String CLIENTE_ID = "cliente-keycloak-123";
-    private static final String OTRO_CLIENTE_ID = "otro-cliente-keycloak";
+    private static final String CLIENTE_ID = "550e8400-e29b-41d4-a716-446655440000";
+    private static final String OTRO_CLIENTE_ID = "550e8400-e29b-41d4-a716-446655440001";
+    private static final String TECNICO_KEYCLOAK_ID = "550e8400-e29b-41d4-a716-446655440002";
 
     @Mock
     private SolicitudRepository solicitudRepository;
@@ -91,6 +92,7 @@ class SolicitudServiceTest {
         );
 
         verify(solicitudRepository).save(creada);
+        verifyNoInteractions(asignacionRepository, intervencionRepository, tecnicosClient);
     }
 
     @Test
@@ -110,6 +112,7 @@ class SolicitudServiceTest {
 
         assertEquals(EstadoSolicitud.CANCELADA, cancelada.getEstado());
         verify(solicitudRepository).save(solicitud);
+        verifyNoInteractions(asignacionRepository, intervencionRepository, tecnicosClient);
     }
 
     @Test
@@ -150,9 +153,7 @@ class SolicitudServiceTest {
 
     @Test
     void asignarTecnicoCreaReservaYActualizaEstado() {
-        Solicitud solicitud = crearSolicitud(
-                EstadoSolicitud.PENDIENTE, CLIENTE_ID
-        );
+        Solicitud solicitud = crearSolicitud(EstadoSolicitud.PENDIENTE, CLIENTE_ID);
 
         LocalDateTime inicio = LocalDateTime.now().plusDays(1);
 
@@ -164,8 +165,7 @@ class SolicitudServiceTest {
         request.setTecnicoId(TECNICO_ID);
 
         TecnicoResponse tecnico = mock(TecnicoResponse.class);
-        EspecialidadResponse especialidad =
-                mock(EspecialidadResponse.class);
+        EspecialidadResponse especialidad = mock(EspecialidadResponse.class);
         ReservaResponse reserva = mock(ReservaResponse.class);
 
         when(solicitudRepository.findById(SOLICITUD_ID))
@@ -193,17 +193,16 @@ class SolicitudServiceTest {
         when(solicitudRepository.saveAndFlush(solicitud))
                 .thenReturn(solicitud);
 
-        Solicitud asignada =
-                solicitudService.asignarTecnico(SOLICITUD_ID, request);
+        Solicitud asignada = solicitudService.asignarTecnico(SOLICITUD_ID, request);
 
         assertEquals(EstadoSolicitud.ASIGNADA, asignada.getEstado());
 
-        ArgumentCaptor<ReservaRequest> reservaCaptor =
-                ArgumentCaptor.forClass(ReservaRequest.class);
+        ArgumentCaptor<ReservaRequest> reservaCaptor = ArgumentCaptor.forClass(ReservaRequest.class);
 
         verify(tecnicosClient).crearReserva(reservaCaptor.capture());
 
-        assertNotNull(reservaCaptor.getValue());
+        ReservaRequest reservaCreada = reservaCaptor.getValue();
+        assertNotNull(reservaCreada);
 
         ArgumentCaptor<Asignacion> asignacionCaptor =
                 ArgumentCaptor.forClass(Asignacion.class);
@@ -226,13 +225,12 @@ class SolicitudServiceTest {
         );
 
         verify(solicitudRepository).saveAndFlush(solicitud);
+        verify(intervencionRepository, never()).save(any(Intervencion.class));
     }
 
     @Test
     void iniciarTrabajoCreaIntervencionYCambiaEstado() {
-        Solicitud solicitud = crearSolicitud(
-                EstadoSolicitud.ASIGNADA, CLIENTE_ID
-        );
+        Solicitud solicitud = crearSolicitud(EstadoSolicitud.ASIGNADA, CLIENTE_ID);
 
         Asignacion asignacion = crearAsignacion(solicitud, TECNICO_ID);
 
@@ -245,13 +243,19 @@ class SolicitudServiceTest {
         when(solicitudRepository.save(solicitud))
                 .thenReturn(solicitud);
 
-        Solicitud enCurso =
-                solicitudService.iniciarTrabajo(SOLICITUD_ID, TECNICO_ID);
+        TecnicoResponse tecnico = mock(TecnicoResponse.class);
+
+        when(tecnicosClient.obtenerPorId(TECNICO_ID))
+                .thenReturn(tecnico);
+
+        when(tecnico.getKeycloakUserId())
+                .thenReturn(TECNICO_KEYCLOAK_ID);
+
+        Solicitud enCurso = solicitudService.iniciarTrabajo(SOLICITUD_ID, TECNICO_KEYCLOAK_ID);
 
         assertEquals(EstadoSolicitud.EN_CURSO, enCurso.getEstado());
 
-        ArgumentCaptor<Intervencion> captor =
-                ArgumentCaptor.forClass(Intervencion.class);
+        ArgumentCaptor<Intervencion> captor = ArgumentCaptor.forClass(Intervencion.class);
 
         verify(intervencionRepository).save(captor.capture());
 
@@ -291,9 +295,15 @@ class SolicitudServiceTest {
         when(solicitudRepository.save(solicitud))
                 .thenReturn(solicitud);
 
-        Solicitud resuelta = solicitudService.resolverTrabajo(
-                SOLICITUD_ID, TECNICO_ID, request
-        );
+        TecnicoResponse tecnico = mock(TecnicoResponse.class);
+
+        when(tecnicosClient.obtenerPorId(TECNICO_ID))
+                .thenReturn(tecnico);
+
+        when(tecnico.getKeycloakUserId())
+                .thenReturn(TECNICO_KEYCLOAK_ID);
+
+        Solicitud resuelta = solicitudService.resolverTrabajo(SOLICITUD_ID, TECNICO_KEYCLOAK_ID, request);
 
         assertAll(
                 () -> assertEquals(

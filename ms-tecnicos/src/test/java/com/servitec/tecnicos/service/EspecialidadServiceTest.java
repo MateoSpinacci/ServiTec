@@ -1,29 +1,27 @@
 package com.servitec.tecnicos.service;
 
-// Clases de la aplicación: datos de entrada/salida, entidad y repositorio del servicio.
 import com.servitec.tecnicos.dto.especialidad.request.CrearEspecialidadRequest;
 import com.servitec.tecnicos.dto.especialidad.response.EspecialidadResponse;
 import com.servitec.tecnicos.entity.Especialidad;
 import com.servitec.tecnicos.repository.EspecialidadRepository;
-// JUnit define y ejecuta los casos de prueba.
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-// Mockito simula el repositorio y lo inyecta en el servicio.
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-// Tipos de Spring para comprobar el estado HTTP de las excepciones.
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-// Aserciones validan resultados y Mockito configura/verifica el repositorio simulado.
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EspecialidadServiceTest {
+
+    private static final String NOMBRE = "Plomería";
+    private static final String DESCRIPCION = "Trabajos de plomería";
 
     @Mock
     private EspecialidadRepository especialidadRepository;
@@ -31,28 +29,34 @@ class EspecialidadServiceTest {
     @InjectMocks
     private EspecialidadService especialidadService;
 
-    // Comprueba que una especialidad nueva se guarde y se devuelva con sus datos.
     @Test
     void crearGuardaEspecialidad() {
-        CrearEspecialidadRequest request =
-                new CrearEspecialidadRequest("Plomería", "Trabajos de plomería");
-        when(especialidadRepository.existsByNombre("Plomería")).thenReturn(false);
+        CrearEspecialidadRequest request = new CrearEspecialidadRequest(NOMBRE, DESCRIPCION);
+
+        when(especialidadRepository.existsByNombre(NOMBRE)).thenReturn(false);
         when(especialidadRepository.save(any(Especialidad.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         EspecialidadResponse response = especialidadService.crear(request);
 
-        assertEquals("Plomería", response.getNombre());
-        assertEquals("Trabajos de plomería", response.getDescripcion());
-        verify(especialidadRepository).save(any(Especialidad.class));
+        assertAll(
+                () -> assertEquals(NOMBRE, response.getNombre()),
+                () -> assertEquals(DESCRIPCION, response.getDescripcion())
+        );
+
+        ArgumentCaptor<Especialidad> captor = ArgumentCaptor.forClass(Especialidad.class);
+        verify(especialidadRepository).save(captor.capture());
+        assertAll(
+                () -> assertEquals(NOMBRE, captor.getValue().getNombre()),
+                () -> assertEquals(DESCRIPCION, captor.getValue().getDescripcion())
+        );
+        verify(especialidadRepository).existsByNombre(NOMBRE);
     }
 
-    // Comprueba que no se permita crear una especialidad con un nombre repetido.
     @Test
     void crearFallaSiElNombreYaExiste() {
-        CrearEspecialidadRequest request =
-                new CrearEspecialidadRequest("Plomería", "Trabajos de plomería");
-        when(especialidadRepository.existsByNombre("Plomería")).thenReturn(true);
+        CrearEspecialidadRequest request = new CrearEspecialidadRequest(NOMBRE, DESCRIPCION);
+        when(especialidadRepository.existsByNombre(NOMBRE)).thenReturn(true);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -60,6 +64,7 @@ class EspecialidadServiceTest {
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        verify(especialidadRepository).existsByNombre(NOMBRE);
         verify(especialidadRepository, never()).save(any(Especialidad.class));
     }
 }
