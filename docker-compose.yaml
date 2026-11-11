@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: servitec_tecnicos
       POSTGRES_USER: servitec
-      POSTGRES_PASSWORD: ${TECNICOS_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${TECNICOS_DB_PASSWORD:-servitec_local}
     ports:
       - "5433:5432"
     volumes:
@@ -23,7 +23,7 @@ services:
     environment:
       POSTGRES_DB: servitec_solicitudes
       POSTGRES_USER: servitec
-      POSTGRES_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${SOLICITUDES_DB_PASSWORD:-servitec_local}
     ports:
       - "5434:5432"
     volumes:
@@ -40,7 +40,7 @@ services:
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-servitec_local}
     ports:
       - "5435:5432"
     volumes:
@@ -61,10 +61,9 @@ services:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-servitec_local}
       KC_HOSTNAME: http://localhost:8180
       KC_HTTP_ENABLED: "true"
-      # Se reemplaza en keycloak/servitec-realm.json al importar el realm
       MS_SOLICITUDES_CLIENT_SECRET: ${MS_SOLICITUDES_CLIENT_SECRET}
     ports:
       - "8180:8080"
@@ -73,6 +72,70 @@ services:
     depends_on:
       keycloak-db:
         condition: service_healthy
+
+  ms-tecnicos:
+    build:
+      context: .
+      dockerfile: ms-tecnicos/Dockerfile
+    container_name: servitec-ms-tecnicos
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tecnicos-db:5432/servitec_tecnicos
+      SPRING_DATASOURCE_USERNAME: servitec
+      TECNICOS_DB_PASSWORD: ${TECNICOS_DB_PASSWORD:-servitec_local}
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/servitec
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/servitec/protocol/openid-connect/certs
+      ORS_API_KEY: ${ORS_API_KEY:-}
+    ports:
+      - "8082:8082"
+    depends_on:
+      tecnicos-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+
+  ms-solicitudes:
+    build:
+      context: .
+      dockerfile: ms-solicitudes/Dockerfile
+    container_name: servitec-ms-solicitudes
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://solicitudes-db:5432/servitec_solicitudes
+      SPRING_DATASOURCE_USERNAME: servitec
+      SOLICITUDES_DB_PASSWORD: ${SOLICITUDES_DB_PASSWORD:-servitec_local}
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/servitec
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/servitec/protocol/openid-connect/certs
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/servitec/protocol/openid-connect/token
+      SERVICIOS_TECNICOS_URL: http://ms-tecnicos:8082
+      MS_SOLICITUDES_CLIENT_SECRET: ${MS_SOLICITUDES_CLIENT_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      solicitudes-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      ms-tecnicos:
+        condition: service_started
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: servitec-api-gateway
+    environment:
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/servitec
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/servitec/protocol/openid-connect/certs
+      SERVICES_SOLICITUDES_URL: http://ms-solicitudes:8080
+      SERVICES_TECNICOS_URL: http://ms-tecnicos:8082
+    ports:
+      - "8081:8081"
+    depends_on:
+      keycloak:
+        condition: service_started
+      ms-solicitudes:
+        condition: service_started
+      ms-tecnicos:
+        condition: service_started
 
 volumes:
   tecnicos_data:

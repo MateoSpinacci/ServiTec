@@ -6,10 +6,11 @@ spring:
       oauth2:
           resourceserver:
               jwt:
-                  issuer-uri: http://localhost:8180/realms/servitec
+                  issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/servitec}
+                  jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/servitec/protocol/openid-connect/certs}
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/servitec_tecnicos
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/servitec_tecnicos}
     username: servitec
     password: ${TECNICOS_DB_PASSWORD}
 
