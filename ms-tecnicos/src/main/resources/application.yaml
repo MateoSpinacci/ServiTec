@@ -2,6 +2,12 @@ spring:
   application:
     name: ms-tecnicos
 
+  security:
+      oauth2:
+          resourceserver:
+              jwt:
+                  issuer-uri: http://localhost:8180/realms/servitec
+
   datasource:
     url: jdbc:postgresql://localhost:5433/servitec_tecnicos
     username: servitec

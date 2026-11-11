@@ -11,74 +11,72 @@ import com.servitec.tecnicos.repository.ReservaRepository;
 import com.servitec.tecnicos.repository.TecnicoRepository;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class CandidatosService {
+
+    static int MAX_TRASLADO_SEGUNDOS = 45 * 60;
 
     TecnicoRepository tecnicoRepository;
     DisponibilidadRepository disponibilidadRepository;
     ReservaRepository reservaRepository;
     RutasClient rutasClient;
 
-    static Logger log = LoggerFactory.getLogger(CandidatosService.class);
-
     public List<CandidatoResponse> buscarCandidatos(CandidatosRequest request) {
-
         LocalDateTime inicio = request.getFechaHoraSolicitada();
         LocalDateTime fin = inicio.plusMinutes(request.getDuracionEstimadaMin());
 
         List<Tecnico> tecnicos = tecnicoRepository.buscarActivosPorEspecialidad(request.getEspecialidadId());
-        List<Tecnico> tecnicosDisponibles = new ArrayList<>();
+
+        List<CandidatoResponse> candidatos = new ArrayList<>();
 
         for (Tecnico tecnico : tecnicos) {
-            List<Disponibilidad> disponibilidades =
-                    disponibilidadRepository.findByTecnicoId(tecnico.getId());
+            List<Disponibilidad> disponibilidades = disponibilidadRepository.findByTecnicoId(tecnico.getId());
 
-            boolean tieneDisponibilidad = false;
-
-            for (Disponibilidad disponibilidad : disponibilidades) {
-                boolean cubreHorario =
-                        !inicio.isBefore(disponibilidad.getInicio())
-                                && !fin.isAfter(disponibilidad.getFin());
-                if (cubreHorario) {
-                    tieneDisponibilidad = true;
-                    break;
-                }
-            }
+            boolean tieneDisponibilidad = disponibilidades.stream()
+                    .anyMatch(d ->
+                            !inicio.isBefore(d.getInicio())
+                                    && !fin.isAfter(d.getFin())
+                    );
 
             if (!tieneDisponibilidad) {
                 continue;
             }
 
-            boolean ocupado = reservaRepository.existeSuperposicion(tecnico.getId(), inicio, fin, EstadoReserva.ACTIVA);
+            boolean ocupado = reservaRepository.existeSuperposicion(
+                    tecnico.getId(),
+                    inicio,
+                    fin,
+                    EstadoReserva.ACTIVA
+            );
 
-            if (!ocupado) {
-                tecnicosDisponibles.add(tecnico);
+            if (ocupado) {
+                continue;
             }
-        }
 
-        List<CandidatoResponse> candidatos = new ArrayList<>();
-
-        for (Tecnico tecnico : tecnicosDisponibles) {
             try {
-                double segundos = rutasClient.calcularDuracionSegundos(
-                        tecnico.getLatitudBase(),
-                        tecnico.getLongitudBase(),
+                double segundos = calcularTiempoTraslado(
+                        tecnico,
                         request.getLatitud(),
                         request.getLongitud()
                 );
 
-                if (segundos <= 45 * 60) {
+                if (segundos <= MAX_TRASLADO_SEGUNDOS) {
                     long minutos = (long) Math.ceil(segundos / 60.0);
 
                     candidatos.add(new CandidatoResponse(
@@ -87,6 +85,7 @@ public class CandidatosService {
                             minutos
                     ));
                 }
+
             } catch (Exception ex) {
                 log.warn(
                         "No se pudo calcular la ruta para el técnico {}",
@@ -97,5 +96,44 @@ public class CandidatosService {
         }
 
         return candidatos;
+    }
+
+    public void validarTiempoTraslado(Long tecnicoId, Double latitudDestino, Double longitudDestino) {
+        Tecnico tecnico = tecnicoRepository.findById(tecnicoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Técnico no encontrado"
+                ));
+
+        double segundos = calcularTiempoTraslado(
+                tecnico,
+                latitudDestino,
+                longitudDestino
+        );
+
+        if (segundos > MAX_TRASLADO_SEGUNDOS) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El técnico supera el máximo de 45 minutos de traslado"
+            );
+        }
+    }
+
+    private double calcularTiempoTraslado(Tecnico tecnico, Double latitudDestino, Double longitudDestino) {
+        double segundos = rutasClient.calcularDuracionSegundos(
+                tecnico.getLatitudBase(),
+                tecnico.getLongitudBase(),
+                latitudDestino,
+                longitudDestino
+        );
+
+        if (!Double.isFinite(segundos) || segundos < 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "La API de rutas devolvió una duración inválida"
+            );
+        }
+
+        return segundos;
     }
 }

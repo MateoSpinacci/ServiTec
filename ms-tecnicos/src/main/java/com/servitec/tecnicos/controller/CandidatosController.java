@@ -1,6 +1,7 @@
 package com.servitec.tecnicos.controller;
 
 import com.servitec.tecnicos.dto.tecnico.request.CandidatosRequest;
+import com.servitec.tecnicos.dto.tecnico.request.ValidarTrasladoRequest;
 import com.servitec.tecnicos.dto.tecnico.response.CandidatoResponse;
 import com.servitec.tecnicos.service.CandidatosService;
 import jakarta.validation.Valid;
@@ -22,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/v1/tecnicos/candidatos")
 public class CandidatosController {
 
-    private final CandidatosService candidatosService;
+    CandidatosService candidatosService;
 
     @PostMapping
     public ResponseEntity<List<CandidatoResponse>> buscarCandidatos(@Valid @RequestBody CandidatosRequest request) {
@@ -31,5 +32,18 @@ public class CandidatosController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(candidatos);
+    }
+
+    @PostMapping("/interno/validar-traslado")
+    public ResponseEntity<Void> validarTraslado(
+            @Valid @RequestBody ValidarTrasladoRequest request) {
+
+        candidatosService.validarTiempoTraslado(
+                request.getTecnicoId(),
+                request.getLatitud(),
+                request.getLongitud()
+        );
+
+        return ResponseEntity.noContent().build();
     }
 }

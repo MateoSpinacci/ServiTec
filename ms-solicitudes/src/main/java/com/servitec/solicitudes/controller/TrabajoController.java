@@ -3,28 +3,29 @@ package com.servitec.solicitudes.controller;
 import com.servitec.solicitudes.entity.Solicitud;
 import com.servitec.solicitudes.service.SolicitudService;
 import com.servitec.solicitudes.dto.solicitud.response.SolicitudResponse;
+import com.servitec.solicitudes.service.TrabajoService;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
 @RequestMapping("/api/v1/trabajos")
 public class TrabajoController {
-
-    private final SolicitudService solicitudService;
-
-    public TrabajoController(SolicitudService solicitudService) {
-        this.solicitudService = solicitudService;
-    }
+    SolicitudService solicitudService;
+    TrabajoService trabajoService;
 
     @GetMapping
-    public ResponseEntity<List<SolicitudResponse>> obtenerTrabajosDelTecnico() {
+    public ResponseEntity<List<SolicitudResponse>> obtenerTrabajosDelTecnico(@AuthenticationPrincipal Jwt jwt) {
 
-        Long tecnicoId = 1L; // Temporal, luego lo obtenemos del JWT.
-
-        List<Solicitud> trabajos =
-                solicitudService.obtenerTrabajosDelTecnico(tecnicoId);
+        List<Solicitud> trabajos = trabajoService.obtenerTrabajosDelTecnico(jwt.getSubject());
 
         List<SolicitudResponse> respuestas = trabajos.stream()
                 .map(solicitud -> SolicitudResponse.of(

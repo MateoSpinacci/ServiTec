@@ -11,6 +11,7 @@ import java.util.List;
 public class TecnicoResponse {
 
     private Long id;
+    private String keycloakUserId;
     private String nombre;
     private boolean activo;
     private List<EspecialidadResponse> especialidades;

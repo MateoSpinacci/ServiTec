@@ -20,7 +20,7 @@ public class Solicitud {
     Long id;
 
     @Column(name = "cliente_keycloak_id", nullable = false)
-    Long clienteId;
+    String clienteId;
 
     @Column(nullable = false)
     Long especialidadId;
