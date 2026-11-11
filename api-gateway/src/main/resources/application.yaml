@@ -1,1 +1,33 @@
-spring.application.name=api-gateway
+
+spring:
+  application:
+    name: api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/servitec
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: ms-solicitudes
+              uri: http://localhost:8080
+              predicates:
+                - Path=/api/v1/solicitudes/**
+
+            - id: ms-trabajos
+              uri: http://localhost:8080
+              predicates:
+                - Path=/api/v1/trabajos/**
+
+            - id: ms-tecnicos
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/v1/tecnicos/**,/api/v1/especialidades/**
+
+server:
+  port: 8081
